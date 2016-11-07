@@ -1,183 +1,175 @@
-firstRun<-function(w1,w2){
-  l<-length(daily)
-  uels_refs<<-paste(("r"),c(1:3),sep="")
-  uels_days<<-list(paste("d",c(1:l),sep=""))
-  prod_add<-cbind(c(1:l),daily)
-  prod_lst<<-list(name="proddaily",type="parameter",dim=1,form="sparse",uels=uels_days,val=prod_add)
-  load_add<-cbind(c(1:l),load_daily*1000)
-  load_lst<<-list(name="loaddaily",type="parameter",dim=1,form="sparse",uels=uels_days,val=load_add)
+library(gdxrrw)
+igdx("C:/GAMS/win64/24.2")
   
-  h<-length(hourly)
-  uels_hourly<<-(paste("h",c(1:h),sep=""))
-  
-  prod_add_hourly1<-cbind(1,1:24,hourly_red[,1])
-  prod_add_hourly2<-cbind(2,1:24,hourly_red[,2])
-  prod_add_hourly3<-cbind(3,1:h,hourly)
-  prod_add_hourly<-rbind(prod_add_hourly1,prod_add_hourly2,prod_add_hourly3)
-  
-  load_add_hourly1<-cbind(1,1:24,hourly_red[,3])
-  load_add_hourly2<-cbind(2,1:24,hourly_red[,4])
-  load_add_hourly3<-cbind(3,1:h,hourly_load)
-  load_add_hourly<-rbind(load_add_hourly1,load_add_hourly2,load_add_hourly3)
-  
-  prod_lst_hourly<<-list(name="prodhourly",type="parameter",dim=2,form="sparse",uels=list(uels_refs,uels_hourly),val=prod_add_hourly)
-  load_lst_hourly<<-list(name="loadhourly",type="parameter",dim=2,form="sparse",uels=list(uels_refs,uels_hourly),val=load_add_hourly)
-  
-  sum(hourly)/sum(hourly_red[,1])/2
-  sum(hourly)/sum(hourly_red[,2])/2
-  
-  uels_h<<-paste(("h"),c(1:length(hourly)),sep="")
-  h_set<-list(name="hourly",type="set",dim=1,uels=list(uels_h))
-  
-  uels_r<<-paste(("r"),c(1:3),sep="")
-  r_set<-list(name="refs",type="set",dim=1,uels=list(uels_r))
-  
-  d_set<-list(name="daily",type="set",dim=1,uels=(uels_days))
-  
-  uels_cnt<-c("weight_hourly","other")
-  val_<-as.matrix(data.frame(c(1,2),c(0.5,0.5)))
-  cnt_lst<<-list(name="controlparams",type="parameter",dim=1,form="sparse",uels=list(uels_cnt),val=val_)
-  val<-as.matrix(data.frame(c(1,2,3),c(w1,w2,1)))
-  weights_lst<<-list(name="weights",type="parameter",dim=1,form="sparse",uels=list(uels_r),val=val)
-  
-  wgdx.lst("../GAMS_models/playmodel/input.gdx",prod_lst,load_lst,cnt_lst,h_set,r_set,prod_lst_hourly,load_lst_hourly,d_set,weights_lst)
-  
+testf<-function(x){
+  return(x)
 }
 
-secondRun<-function(){
-
-  r_set<-list(name="refs",type="set",dim=1,uels=list(uels_r))
+###reads results from a GAMS file and puts it in a list, where list names are
+###equal to GAMS variable names
+###f is filename
+###names is a vector of variable names (GAMS)
+###uels is a list of lists: each list element is a list. It is associated with the GAMS variable
+###and contains the set(s) for that variable.
+readResults<-function(f,names,uels){
   
-  
-  
-  h<-length(hourly)
-  uels_hourly<<-(paste("h",c(1:h),sep=""))
-  h_set<-list(name="hourly",type="set",dim=1,uels=list(uels_hourly))
-  
-  prod_add_hourly<-cbind(1,1:h,hourly)
-  
-  load_add_hourly<-cbind(1,1:h,hourly_load)
-  
-  prod_lst_hourly<<-list(name="prodhourly",type="parameter",dim=2,form="sparse",uels=list(uels_refs,uels_hourly),val=prod_add_hourly)
-  load_lst_hourly<<-list(name="loadhourly",type="parameter",dim=2,form="sparse",uels=list(uels_refs,uels_hourly),val=load_add_hourly)
-  
-  uels_cnt<-c("weight_hourly","other")
-  val_<-as.matrix(data.frame(c(1,2),c(1,0.5)))
-  cnt_lst<<-list(name="controlparams",type="parameter",dim=1,form="sparse",uels=list(uels_cnt),val=val_)
-  val<-as.matrix(data.frame(c(1,2),c(1,0)))
-  weights_lst<<-list(name="weights",type="parameter",dim=1,form="sparse",uels=list(uels_r),val=val)
-  
-  
-  wgdx.lst("../GAMS_models/playmodel/input.gdx",prod_lst,load_lst,cnt_lst,h_set,r_set,prod_lst_hourly,load_lst_hourly,d_set,weights_lst)
-  
-}
-
-readResults<-function(){
-
-thermal_hourly<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                     list(name="x_term_hourly",form="full",uels=list(uels_refs,uels_hourly)))$val
-
-stor_hourly<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                     list(name="x_stor_out_hourly",form="full",uels=list(uels_refs,uels_hourly)))$val
-
-stor_in_hourly<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                     list(name="x_stor_in_hourly",form="full",uels=list(uels_refs,uels_hourly)))$val
-
-renew_hourly<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                     list(name="x_renew_hourly",form="full",uels=list(uels_refs,uels_hourly)))$val
-
-load_hourly<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                     list(name="loadhourly",form="full",uels=list(uels_refs,uels_hourly)))$val
-
-curtail_hourly<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                     list(name="x_curtail_hourly",form="full",uels=list(uels_refs,uels_hourly)))$val
-
-df<-data.frame(thermal_hourly[1,],stor_hourly[1,],stor_in_hourly[1,],renew_hourly[1,],load_hourly[1,],curtail_hourly[1,])
-
-hourly_res<<-aggregate(df,by=hourly_ag,sum)
-hourly_res<<-hourly_res[,2:ncol(hourly_res)]
-names(hourly_res)<-c("thermal","stor","stor_in","renew","load","curtail")
-
-thermal_daily<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                    list(name="x_term_daily",form="full",uels=(uels_days)))$val
-
-stor_daily<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                 list(name="x_stor_out_daily",form="full",uels=(uels_days)))$val
-
-stor_in_daily<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                    list(name="x_stor_in_daily",form="full",uels=(uels_days)))$val
-
-renew_daily<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                  list(name="x_renew_daily",form="full",uels=(uels_days)))$val
-
-load_daily<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                 list(name="loaddaily",form="full",uels=(uels_days)))$val
-
-curtail_daily<<-rgdx("../GAMS_models/playmodel/results_mixed.gdx",
-                    list(name="x_curtail_daily",form="full",uels=(uels_days)))$val
-
-}
-
-
-
-
-generateVariableResolutionTimeSeries<-function(all,hourly_load,df_hourly,lower,threshhold){
-  p<-(all-hourly_load)
-  le1<-rle(p<lower)
-  ress<-rep(le1$lengths >= threshhold & le1$values,times = le1$lengths)
-  plot(p[1:800],type="l")
-  p1<-p
-  p1[ress==0]<-NA
-  lines(p1,col="red")
-  
-cc<-NA
-for(i in seq(1,length(all),24)){
-  #daily values
-  df<-NA
-  if(sum(ress[i:(i+23)]==0)){
-    a<-apply(df_hourly[i:(i+23),],2,sum)
-    df<-data.frame(t(c(a)),c(sum(hourly_load[i:(i+23)])),24)
-  }else{
-    df<-data.frame(df_hourly[i:(i+23),],hourly_load[i:(i+23)],1)
-    
+  setwd(paste(base_dir,"/../../gms_execute",sep=""))
+  rgdx.scalar(f,"elapsed")
+  names_uels<-list()
+  for(i in 1:length(names)){
+    names_uels[[length(names_uels)+1]]<-list(name=names[i],form="full",uels=uels[[i]])
   }
-  names(df)<-c(paste(1:4,"wind"),"hydro","load","multi")
-  cc<-rbind(cc,df)
+  
+  res<-sapply(names_uels,
+              function(names_uels,file){return(rgdx(file,names_uels)$val)},
+              f,simplify=FALSE)
+  
+  names(res)<-names
+  return(res)
   
 }
+
+###creates uel index used for wgdx
+###prescript:string used to start the GAMS index
+###c: vector with elements of GAMS index
+createUEL<-function(prescript,c){
+  return(list(paste(prescript,c,sep="")))  
+}
+
+###create set for GAMS
+###name: name of set
+###UEL: corresponding uel list(s)
+###dim:dimension of set
+createSET<-function(name,UEL,dim=1){
+  return(list(name=name,type="set",dim=dim,uels=UEL))
+}
+
+
+###create GAMS Parameter
+###name: name of parameter
+###value: data.frame or matrix with values for parameter
+###uels: list of uel lists
+##dim: dimension of parameter
+createPARAM<-function(name,value,uels,dim=1){
+  
+  val<-as.matrix(value)
+  return(list(name=name,type="parameter",dim=dim,form="sparse",uels=uels,val=val))
+  
+}
+
+###runs gams file and reads results
+runGAMSReadResults<-function(timesteps,nmb_intermittent){
+  
+  
+  
+  setwd(paste(base_dir,"/../../gms_execute",sep=""))
+  gams("../RE_EXTREME/gms_source/changing_time_resolution.gms")
+  
+  uels_t<-createUEL("t",1:timesteps)
+  uels_loc<-createUEL("l",1:nmb_intermittent)
+  
+  readResults("results_time_resolution.gdx",
+              c("x_invest_intermittent","x_invest_storage","x_invest_thermal_cap","totalCost","elapsed","x_term"),
+              list(uels_loc,a,b,c,d,uels_t),
+              )
+  
+}
+
+
+####generates, from the input data, a timeseries that has variable length
+###hourly_load: load per hour. The length has to be a multiple of 24.
+###renewable_production_hourly: intermittent renewable production per hour. The length has to be a multiple of 24.
+###hydropower_hourly: hydropower inflows per hour. The length has to be a multiple of 24.
+###renewable_scaling: determines the installed capacity for renewables
+###lower: the lower boundary for residual production (in MW) that defines which days are modelled in detail. Values below that value are taken into account.
+###upper: the upper boundary for residual production (in MW) that defines which days are used in detail. Values above that value are taken into account.
+###threshhold: number of hours that production has to be below (lower) or above (upper) production
+###plot: indicates if a figure shold be plotted
+###limits: indicates the x-axis limits for the plot
+###returns a data.frame with combined renewable, hydropower and load production in dense format, i.e. aggregation. the last column indicates the aggregation level.
+###i.e. the number of hours represented by the value
+generateVariableResolutionTimeSeries<-function(hourly_load,intermittent_hourly,hydropower_hourly,renewable_scaling,lower,upper,threshhold,plot=TRUE, limits=c(1:800)){
+  
+  hydro_intermittent_prod<-data.frame(intermittent_hourly*renewable_scaling,hydropower_hourly)
+  all_production<-apply(hydro_intermittent_prod,1,sum)
+  
+  residual_production<-(all_production-hourly_load)
+  le1<-rle(residual_production<lower|residual_production>upper)
+  ress<-rep(le1$lengths >= threshhold & le1$values,times = le1$lengths)
+ 
+  if(plot){
+    plot(residual_production[limits],type="l")
+    residual_production1<-residual_production
+    residual_production1[ress==FALSE]<-NA
+    lines(residual_production1[limits],col="red")
+    lines(c(0,length(limits)),c(lower,lower),lty=2,col="blue")
+    lines(c(0,length(limits)),c(upper,upper),lty=2,col="blue")
+  }
+  
+  cc<-NA
+  for(i in seq(1,length(all_production),24)){
+ 
+    df<-NA
+    if(sum(ress[i:(i+23)]==0)){
+      #daily values
+      ren<-apply(intermittent_hourly[i:(i+23),],2,sum)
+      hyd<-apply(hydropower_hourly[i:(i+23),,drop=FALSE],2,sum)
+      df<-data.frame(t(c(ren)),t(c(hyd)),c(sum(hourly_load[i:(i+23)])),24)
+    
+      }
+    else
+      {
+      #hourly values
+      df<-data.frame(intermittent_hourly[i:(i+23),],hydropower_hourly[i:(i+23),,drop=FALSE],hourly_load[i:(i+23)],1)
+    
+    }
+    names(df)<-c(paste(1:ncol(intermittent_hourly),"renewable"),"hydro","load","multi")
+    cc<-rbind(cc,df)
+  
+  }
+  
 cc<-cc[2:nrow(cc),]
 return(cc)
 }
 
-writeCCToGDX<-function(cc){
+###writes model data to disk
+###cc: all time series data
+###nmb_intermittent_ number of intermittent sources modelled
+writeToGDX<-function(cc,nmb_intermittent){
+  
   ####write data to gdx file
-  uels_t<-list(paste("t",1:nrow(cc),sep=""))
-  t_set<-list(name="t",type="set",dim=1,uels=(uels_t))
+  uels_t<-createUEL("t",1:nrow(cc))
+  t_set <-createSET("t",uels_t)
+
+  uels_loc<-createUEL("l",1:nmb_intermittent)
+  loc_set<-createSET("l",uels_loc)
   
-  uels_loc<-list(paste("l",1:4,sep=""))
-  loc_set<-list(name="loc",type="set",dim=1,uels=(uels_loc))
   
+  ###intermittent generation
   val<-NA
-  for(i in 1:4){
+  for(i in 1:nmb_intermittent){
     val<-rbind(val,
                data.frame(i,1:nrow(cc),cc[,i]))
       
   }
   val<-val[2:nrow(val),]
-  val<-as.matrix(val)
-  int_lst<-list(name="intermittent",type="parameter",dim=2,form="sparse",uels=list(uels_loc[[1]],uels_t[[1]]),val=val)
-
-  val<-cbind(1:nrow(cc),cc[,5])
-  hydro_lst<-list(name="hydro",type="parameter",dim=1,form="sparse",uels=uels_t,val=val)
+  uels<-list(uels_loc[[1]],uels_t[[1]])
+  intermittent_p<-createPARAM("intermittent",val,uels,2)
+  
+  ###hydropower
+  val<-cbind(1:nrow(cc),cc[,nmb_intermittent+1])
+  hydro_p<-createPARAM("hydro",val,uels_t)
+  
+  ###load
+  val<-cbind(1:nrow(cc),cc[,nmb_intermittent+2])
+  load_p<-createPARAM("load",val,uels_t)
+  
+  ###length of timeslotes
+  val<-cbind(1:nrow(cc),cc[,nmb_intermittent+3])
+  length_p<-createPARAM("length",val,uels_t)
   
   
-  val<-cbind(1:nrow(cc),cc[,6])
-  load_lst<-list(name="load",type="parameter",dim=1,form="sparse",uels=uels_t,val=val)
-  
-  val<-cbind(1:nrow(cc),cc[,7])
-  length_lst<-list(name="length",type="parameter",dim=1,form="sparse",uels=uels_t,val=val)
-  
-  
-  wgdx.lst("../gms_source/input_tr.gdx",t_set,loc_set,int_lst,hydro_lst,load_lst,length_lst)
+  setwd(base_dir)
+  wgdx.lst("../../gms_execute/input_tr.gdx",t_set,loc_set,intermittent_p,hydro_p,load_p,length_p)
   
 }

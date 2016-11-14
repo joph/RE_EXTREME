@@ -1,14 +1,26 @@
 set t;
 set runs/r1*r4/;
-set loc;
+set p;
+set reg;
+set ws;
 
-parameter load(t);
+alias(p,p1);
+
+
+parameter load(reg,t);
 parameter length(t);
-parameter hydro(t);
-parameter intermittent(loc,t);
+parameter hydro(reg,ws,p,t);
+parameter intermittent(reg,p,t);
+parameter hydroConvFact(reg,ws,p);
+parameter runOffDelay(reg,ws,p);
+parameter minFlow(reg,ws,p);
+parameter maxFlow(reg,ws,p);
+parameter maxReservoir(reg,ws,p);
+parameter upRiver(reg,ws,p,p1);
 
 $GDXIN "input_tr.gdx"
-$LOAD loc,t,load,length,hydro,intermittent
+$LOAD reg,ws,p,t,hydroConvFact,runOffDelay,load
+$LOAD length,hydro,intermittent,minFlow,maxFlow,maxReservoir,upRiver
 $GDXIN
 
 parameter results(runs,*);
@@ -16,17 +28,33 @@ parameter invest_thermal_cap;
 
 
 positive variables
-x_term(t),
-x_renew(loc,t),
-x_hydro(t),
-x_stor_in(t),
-x_stor_out(t),
-x_stor_lev(t),
-x_curtail(t),
-x_loss(t),
-x_invest_thermal_cap,
-x_invest_storage,
-x_invest_intermittent(loc)
+
+***thermal power plants
+x_term(reg,p,t),
+
+***intermittent renewables
+x_renew(reg,p,t),
+
+***hydropower plants
+x_hydro(reg,ws,p,t),
+x_spill(reg,ws,p,t),
+x_h_stor_in(reg,ws,p,t),
+x_h_stor_out(reg,ws,p,t),
+x_h_stor_lev(reg,ws,p,t),
+
+***other storage plants
+x_stor_in(reg,p,t),
+x_stor_out(reg,p,t),
+x_stor_lev(reg,p,t),
+
+***curtailment & losses
+x_curtail(reg,t),
+x_loss(reg,t),
+
+***investments
+x_invest_thermal_cap(reg,p),
+x_invest_storage(reg,p),
+x_invest_intermittent(reg,p)
 ;
 
 variables
@@ -41,6 +69,14 @@ renewable,
 
 hydro_bal,
 
+storage_h_lev,
+
+storage_h_max,
+
+min_flow,
+
+max_flow,
+
 storage_lev,
 
 storage_max,
@@ -49,31 +85,70 @@ res_therm
 ;
 
 
-objective..     totalCost        =E= SUM(t,x_term(t)+300*x_loss(t))+
-                                     50000*x_invest_thermal_cap+
-                                     250*x_invest_storage+
-                                     SUM(loc,25000*x_invest_intermittent(loc));
+objective             ..totalCost            =E= SUM((reg,p,t),x_term(reg,p,t)+300*x_loss(reg,t))+
+                                                 SUM((reg,p  ),50000*x_invest_thermal_cap(reg,p))+
+                                                 SUM((reg,p  ),250*x_invest_storage(reg,p))      +
+                                                 SUM((reg,p  ),25000*x_invest_intermittent(reg,p))
+                                                 ;
+*balances supply and demand in the region
+bal(reg,t)            ..load(reg,t)          =E= SUM(p,x_term(reg,p,t))              +
+                                                 SUM((p,ws),x_h_stor_out(reg,ws,p,t))+
+                                                 SUM(p,x_stor_out(reg,p,t))          +
+                                                 SUM(p,x_renew(reg,p,t))             +
+                                                 SUM((p,ws),x_hydro(reg,ws,p,t))     +
+                                                 x_loss(reg,t)                       -
+                                                 SUM(p,x_stor_in(reg,p,t))           -
+                                                 x_curtail(reg,t)
 
-bal(t)..        load(t)          =E= x_term(t)+
-                                     x_stor_out(t)+
-                                     SUM(loc,x_renew(loc,t))+
-                                     x_hydro(t)+
-                                     x_loss(t)-
-                                     x_curtail(t)
-                                     ;
+                                                ;
+
+*********Intermittent renewables*********
+
+*renewable generation at each locatio
+renewable(reg,p,t)  ..x_renew(reg,p,t)       =E= intermittent(reg,p,t) *  x_invest_intermittent(reg,p);
 
 
-renewable(loc,t)..x_renew(loc,t) =E= intermittent(loc,t) *  x_invest_intermittent(loc);
+*********hydropower production*********
 
-hydro_bal(t)..  hydro(t)         =E= x_hydro(t)+x_stor_in(t);
+*balance hydropower production at each plant, depending on upper reservoir production
+hydro_bal(reg,ws,p,t)..hydro(reg,ws,p,t)     =E= x_hydro(reg,ws,p,t)    +
+                                                 x_spill(reg,ws,p,t)    +
+                                                 x_h_stor_in(reg,ws,p,t)-
+                                                 SUM((p1)$upRiver(reg,ws,p,p1),hydroConvFact(reg,ws,p1)*
+                                                 (x_hydro(reg,ws,p1,t-runOffDelay(reg,ws,p1))+x_spill(reg,ws,p1,t-runOffDelay(reg,ws,p1))));
 
-storage_lev(t)..x_stor_lev(t)    =E= x_stor_lev(t-1)+
-                                     0.9*x_stor_in(t)-
-                                     x_stor_out(t);
+*level of storage in hydropower plants
+storage_h_lev(reg,ws,p,t)..
+                     x_h_stor_lev(reg,ws,p,t)=E= x_h_stor_lev(reg,ws,p,t-1)+
+                                                 0.9*x_h_stor_in(reg,ws,p,t)-
+                                                 x_h_stor_out(reg,ws,p,t);
+*maximum level of storage
+storage_h_max(reg,ws,p,t)..
+                     x_h_stor_lev(reg,ws,p,t)=L= maxReservoir(reg,ws,p);
 
-storage_max(t)..x_stor_lev(t)    =L= x_invest_storage;
+*miminum flow constraint
+min_flow(reg,ws,p,t)  ..minFlow(reg,ws,p)    =L= x_hydro(reg,ws,p,t)+
+                                                 x_spill(reg,ws,p,t);
 
-res_therm(t)..  x_term(t)        =L= length(t)*x_invest_thermal_cap;
+*maximum flow constraint
+max_flow(reg,ws,p,t)  ..maxFlow(reg,ws,p)    =G= x_hydro(reg,ws,p,t)+
+                                                 x_spill(reg,ws,p,t);
+
+
+*********battery storage*********
+
+*level of storage in batteries
+storage_lev(reg,p,t)..x_stor_lev(reg,p,t)  =E= x_stor_lev(reg,p,t-1)+
+                                                 0.9*x_stor_in(reg,p,t)-
+                                                 x_stor_out(reg,p,t);
+*maximum level of storage
+storage_max(reg,p,t)..x_stor_lev(reg,p,t)  =L= x_invest_storage(reg,p);
+
+
+*********thermal power production*********
+
+*constraints production to maximal capacity
+res_therm(reg,p,t)  ..x_term(reg,p,t)      =L= length(t)*x_invest_thermal_cap(reg,p);
 
 option limrow =100;
 
@@ -86,21 +161,20 @@ scalar starttime; starttime = jnow;
 SOLVE mint using LP minimizing totalCost;
 scalar elapsed; elapsed = (jnow - starttime)*24*3600;
 
-results("r1","thermal")=SUM(t,x_term.l(t));
-results("r1","w1")=SUM((t),x_renew.l("l1",t));
-results("r1","w2")=SUM((t),x_renew.l("l2",t));
-results("r1","w3")=SUM((t),x_renew.l("l3",t));
-results("r1","w4")=SUM((t),x_renew.l("l4",t));
-results("r1","hydro")=SUM(t,x_hydro.l(t));
-results("r1","stor_out")=SUM(t,x_stor_out.l(t));
-results("r1","curtail")=SUM(t,x_curtail.l(t));
-results("r1","investment_thermal")=x_invest_thermal_cap.l;
-results("r1","investment_storage")=x_invest_storage.l;
-results("r1","total cost")=totalCost.l;
-results("r1","elapsed")=elapsed;
-results("r1","load")=SUM(t,load(t));  ;
-
-results("r1","loss")=SUM(t,x_loss.l(t));
+results("r1","thermal")           =SUM((reg,p,t),x_term.l(reg,p,t));
+results("r1","reg1")              =SUM((p,t),x_renew.l("reg1",p,t));
+results("r1","reg2")              =SUM((p,t),x_renew.l("reg2",p,t));
+results("r1","reg3")              =SUM((p,t),x_renew.l("reg3",p,t));
+results("r1","reg4")              =SUM((p,t),x_renew.l("reg4",p,t));
+results("r1","hydro")             =SUM((reg,ws,p,t),x_hydro.l(reg,ws,p,t));
+results("r1","stor_out")          =SUM((reg,p,t),x_stor_out.l(reg,p,t));
+results("r1","curtail")           =SUM((reg,t),x_curtail.l(reg,t));
+results("r1","investment_thermal")=sum((reg,p),x_invest_thermal_cap.l(reg,p));
+results("r1","investment_storage")=sum((reg,p),x_invest_storage.l(reg,p));
+results("r1","total cost")        =totalCost.l;
+results("r1","elapsed")           =elapsed;
+results("r1","load")              =SUM((reg,t),load(reg,t));  ;
+results("r1","loss")              =SUM((reg,t),x_loss.l(reg,t));
 
 display  results;
 

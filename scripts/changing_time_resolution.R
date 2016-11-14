@@ -1,5 +1,5 @@
 ###prepare input data
-base_dir<-"D:/google drive/Anträge/formas/RE_EXTREME/RE_EXTREME/scripts"
+base_dir<-"D:/google drive/Anträge/formas/RE_EXTREME github/RE_EXTREME/scripts"
 setwd(base_dir)
 source("functions.R")
 
@@ -40,5 +40,15 @@ writeToGDX(cc,4)
 
 ###fixed length
 cc<-data.frame(renewable_production_hourly_final,hourly_load,1)
-writeToGDX(cc)
 
+uels<-prepareUels()
+sets<-prepareSets(uels)
+hydroParameters<-prepareBasicHydroParameters(data.frame(1:100,1:100,1:100,1:100),uels)
+intermittentPs<-prepareIntermittentParameters(data.frame(1:100,1:100,1:100,1:100),uels)
+loadP<-prepareLoad(data.frame(1:100,1:100,1:100,1:100),uels)
+lengthTimeSteps<-prepareTimeSteps(rep(1,100),uels)
+combine<-c(sets,hydroParameters,intermittentPs,loadP,lengthTimeSteps)
+
+
+####write to GDX
+writeToGDXList(combine,"../../gms_execute/input_tr.gdx")

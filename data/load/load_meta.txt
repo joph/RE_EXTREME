@@ -1,0 +1,4 @@
+raw data downloaded from http://www.svk.se/aktorsportalen/elmarknad/statistik/
+converted with R-Script in scripts/functions.R - helperFunctionXLS
+Period: 1.1.2007-31.12.2015
+Timeformat: UTC+1

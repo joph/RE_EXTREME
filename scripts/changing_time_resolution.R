@@ -3,6 +3,39 @@ base_dir<-"D:/google drive/Anträge/formas/RE_EXTREME github/RE_EXTREME/scripts"
 setwd(base_dir)
 source("functions.R")
 
+
+length<-10000
+
+####LOAD HYDRO DATA
+####hydrostations_test_data
+####columns: names, region, river, plant id,successor,conversion_factor
+hydrostations<-data.frame(c("Plant A","Plant B","Plant C"),c(1,1,2),c(1,1,1),c(1,2,1),c(1,0,0),c(0.5,0,0))
+####loading hydropower_timeseries
+hydropower_ts<-data.frame(runif(length),runif(length),runif(length))
+names(hydropower_ts)<-c(c("Plant A","Plant B","Plant C"))
+
+####LOAD WIND DATA
+windData<-loadWindTimeSeries("1999-01-01 00:00","1999-01-01 09:00")
+
+####LOAD LOAD DATA
+loadData<-loadTimeSeries("1999-01-01 00:00","1999-01-01 09:00")
+
+
+setwd(base_dir)
+setwd("../data/electricity production/")
+elec_prod<-read.table("n_fot2001-2014.csv",sep=";",header=TRUE)
+
+####restrict to certain period
+
+
+####LOAD LOAD DATA
+
+
+
+
+####load hydro files
+
+
 ####load input data from files
 setwd("../data/wind/SCENARIOS AND TIME SERIES OF FUTURE WIND POWER")
 wind<-read.table("B1.csv",sep=";",header=TRUE)
@@ -44,11 +77,11 @@ cc<-data.frame(renewable_production_hourly_final,hourly_load,1)
 uels<-prepareUels()
 sets<-prepareSets(uels)
 hydroParameters<-prepareBasicHydroParameters(data.frame(1:100,1:100,1:100,1:100),uels)
-intermittentPs<-prepareIntermittentParameters(data.frame(1:100,1:100,1:100,1:100),uels)
+intermittentPs<-list(loadWindTimeSeries("1999-01-01 00:00","1999-01-02 00:00")$generateGDX())
 loadP<-prepareLoad(data.frame(1:100,1:100,1:100,1:100),uels)
 lengthTimeSteps<-prepareTimeSteps(rep(1,100),uels)
-combine<-c(sets,hydroParameters,intermittentPs,loadP,lengthTimeSteps)
-
+#combine<-c(sets,hydroParameters,intermittentPs,loadP,lengthTimeSteps)
+combine<-c(intermittentPs)
 
 ####write to GDX
 writeToGDXList(combine,"../../gms_execute/input_tr.gdx")

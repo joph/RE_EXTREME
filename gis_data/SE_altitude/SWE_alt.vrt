@@ -1,0 +1,16 @@
+<VRTDataset rasterXSize="1608" rasterYSize="1680">
+  <SRS>GEOGCS[&quot;WGS 84&quot;,DATUM[&quot;unknown&quot;,SPHEROID[&quot;WGS84&quot;,6378137,298.257223563]],PRIMEM[&quot;Greenwich&quot;,0],UNIT[&quot;degree&quot;,0.0174532925199433]]</SRS>
+  <GeoTransform> 1.0900000000000000e+001, 8.3333330000000001e-003, 0.0000000000000000e+000, 6.9200000000000003e+001, 0.0000000000000000e+000,-8.3333330000000001e-003</GeoTransform>
+  <Metadata domain="Esri">
+    <MDI key="PyramidResamplingType">NEAREST</MDI>
+  </Metadata>
+  <VRTRasterBand dataType="Int16" band="1" subClass="VRTRawRasterBand">
+    <Description>SWE_alt</Description>
+    <NoDataValue>-9.99900000000000E+003</NoDataValue>
+    <SourceFilename relativeToVRT="1">SWE_alt.gri</SourceFilename>
+    <ImageOffset>0</ImageOffset>
+    <PixelOffset>2</PixelOffset>
+    <LineOffset>3216</LineOffset>
+    <ByteOrder>LSB</ByteOrder>
+  </VRTRasterBand>
+</VRTDataset>

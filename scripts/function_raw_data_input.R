@@ -1,4 +1,4 @@
-source("libraries.R")
+source("scripts/libraries.R")
 ####Reads and Writes Load data in Tidy format to disk
 readAndWriteXLSLoad<-function(){
 
@@ -12,8 +12,17 @@ readAndWriteXLSLoad<-function(){
     
     ####assign names, read values
     names(sheet1)<-paste(names(sheet1_title),names(sheet1),sep=".")
-    load1<-select(sheet1,1,2,11:14)
-    names(load1)<-c("Date","Time","SE1","SE2","SE3","SE4")
+    #load1<-select(sheet1,1,2,11:14)
+    load1<-select(sheet1,1,2,3:22)
+    load1<-mutate(load1,SE1=apply(load1[,seq(3,22,4)],1,sum)*-1,
+                        SE2=apply(load1[,seq(4,22,4)],1,sum)*-1,
+                        SE3=apply(load1[,seq(5,22,4)],1,sum)*-1,
+                        SE4=apply(load1[,seq(6,22,4)],1,sum)*-1)
+    
+    names(load1)[1:2]<-c("Date","Time")
+    load1<-load1 %>% select(Date,Time,SE1,SE2,SE3,SE4)
+    
+    
     
     ####correct date
     load1$Date<-ymd(load1$Date)
@@ -26,7 +35,7 @@ readAndWriteXLSLoad<-function(){
     ####construct final tibble
     load2<-add_column((load1[,3:6]),date,.before=1)
     names(load2)<-c("Date",names(load2)[2:5])
-    load2[,2:5]<-load2[,2:5]*-1
+    load2[,2:5]<-load2[,2:5]
     if(is.null(load)){
       load<-load2
     }else{
@@ -39,24 +48,53 @@ readAndWriteXLSLoad<-function(){
   sheet1<-read_excel("../data/load/timvarden2010II.xls",col_names=TRUE)
   names(sheet1)<-c(paste("C",1:ncol(sheet1),sep=""))
   load4<-bind_cols(sheet1[,1],
-                   sheet1[,2:5])
-  names(load4)<-c("Date","SE1","SE2","SE3","SE4")
-  load4$Date<-dmy_hm(load4$Date)
-  load4[,2:5]<-load4[,2:5]*-1
-  load<-bind_rows(load,load4)
+                   sheet1[,c(2:43)])
+  load4_<-mutate(load4,SE1=apply(load4[,c(2,9,13,36)],1,sum)*-1,
+                       SE2=apply(load4[,c(3,6,10,14,37)],1,sum)*-1,
+                       SE3=apply(load4[,c(4,7,11,15,38)],1,sum)*-1,
+                       SE4=apply(load4[,c(5,8,12,16,39)],1,sum)*-1) %>% 
+                       select(1,44:47)
+  
+  
+  names(load4_)<-c("Date","SE1","SE2","SE3","SE4")
+  load4_$Date<-dmy_hm(load4_$Date)
+  load4_[,2:5]<-load4_[,2:5]
+  
+  load<-bind_rows(load,load4_)
+  matplot(load[,2:5],type="l")  
+  
+  sheet1<-read_excel(paste("../data/load/timvarden",2011,".xls",sep=""),col_names=FALSE,skip=5)
+  load1<-bind_cols(sheet1[,1],sheet1[,c(2:12,33:40)])
+  load1_<-mutate(load1,SE1=apply(load1[,c(2,9,13,17)],1,sum)*-1,
+                 SE2=apply(load1[,c(3,6,10,14,18)],1,sum)*-1,
+                 SE3=apply(load1[,c(4,7,11,15,19)],1,sum)*-1,
+                 SE4=apply(load1[,c(5,8,12,16,20)],1,sum)*-1) %>% 
+                 select(1,21:24)
+  
+  
+  names(load1_)<-c("Date","SE1","SE2","SE3","SE4")
+ 
+  load<-bind_rows(load,load1_)
   matplot(load[,2:5],type="l")  
   
   
   #2011-2015
-  startindex<-c(2,2,2,2,2)
-  jj<-1
-  for(i in 2011:2015){
+  for(i in 2012:2015){
     sheet1<-read_excel(paste("../data/load/timvarden",i,".xls",sep=""),col_names=FALSE,skip=5)
-    load1<-bind_cols(sheet1[,1],sheet1[,startindex[jj]:(startindex[jj]+3)])
-    jj<-jj+1
-    names(load1)<-c("Date","SE1","SE2","SE3","SE4")
-    load1[,2:5]<-load1[,2:5]*-1
-    load<-bind_rows(load,load1)
+    if(i==2012){
+      load1<-bind_cols(sheet1[,1],sheet1[,c(2:13,35:42)])
+    }else{
+      load1<-bind_cols(sheet1[,1],sheet1[,c(2:13,34:41)])
+    }
+    load1_<-mutate(load1,SE1=apply(load1[,c(2,6,10,14,18)],1,sum)*-1,
+                         SE2=apply(load1[,c(3,7,11,15,19)],1,sum)*-1,
+                         SE3=apply(load1[,c(4,8,12,16,20)],1,sum)*-1,
+                         SE4=apply(load1[,c(5,9,13,17,21)],1,sum)*-1) %>%
+                         select(1,22:25)
+    
+   
+    names(load1_)<-c("Date","SE1","SE2","SE3","SE4")
+    load<-bind_rows(load,load1_)
   }
   #plot(load[,1],type="l")
   
@@ -78,7 +116,8 @@ readAndWriteXLSLoad<-function(){
   write_feather(loadTidy,path="../data/load/load_2007_2015.feather") 
   test<-read_feather("../data/load/load_2007_2015.feather")
   
-  print("Wrote ../data/load/load_2007_2015.csv and ../data/load/load_2007_2015.feather to disk.")
+  
+  print("Wrote data/load/load_2007_2015.csv and data/load/load_2007_2015.feather to disk.")
   
 }
 
@@ -116,7 +155,7 @@ readAndWriteGridCapacity<-function()
 {
   
   cap<-read_delim("../data/transmission/lineCapacities.csv",delim=";")
-  write_feater(cap,path="../data/transmission/lineCapacities.feather")
+  write_feather(cap,path="../data/transmission/lineCapacities.feather")
   
   
 }
@@ -124,20 +163,13 @@ readAndWriteGridCapacity<-function()
 ####create test hydro data
 testHydroData<-function(){
   
-  period<-seq(as.POSIXct("1979-01-01 00:00"),
-              as.POSIXct("2015-12-31 23:00"),by="h")
-  n<-length(period)
-  tb<-tibble("Time"=period,
-             "1"=runif(n)*3600,
-             "2"=runif(n)*1200,
-             "3"=runif(n)*500,
-             "4"=runif(n)*300,
-             "5"=runif(n)*400,
-             "6"=runif(n)*1000)  
-  
-  gather(tb,key="Index",val="HydropowerProduction",2:7) %>%
-    mutate(Index=as.integer(Index)) %>%
+
+  shype_hydro_nat <- read_feather("../data/hydro/shype_hydro_nat_ts.feather") %>% 
+    mutate(Time=date,Index=as.numeric(as.factor(region)),HydropowerProduction=mwh) %>% 
+    select(Time,as.integer(Index),HydropowerProduction) %>% 
     write_feather("../data/hydro/timeseries.feather")
+  
+ 
   
 }
 

@@ -73,12 +73,12 @@ display sInter;
 
 parameter mult(runs,m);
 mult(runs,m)=1;
-*mult("R2","M2")=0;
-*mult("R3","M3")=10000;
-*mult("R4","M4")=10000;
-*mult("R5","M2")=0;
-*mult("R5","M3")=10000;
-*mult("R5","M4")=10000;
+mult("R2","M2")=0;
+mult("R3","M3")=10000;
+mult("R4","M4")=10000;
+mult("R5","M2")=0;
+mult("R5","M3")=10000;
+mult("R5","M4")=10000;
 
 
 parameter mult1(m);

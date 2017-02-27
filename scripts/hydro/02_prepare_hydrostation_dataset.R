@@ -28,8 +28,6 @@ load(file="data/hydro/se_shype_basins_hp.RData")
 # load hydropower station spatial data set
 load(file="data/hydro/hydrostations_sweden_spatial.RData")
 
-### Load Swedisch bidding areas (test file)
-se_bidding_areas           <- readOGR(dsn = "gis_data/elomrade", layer = "elomrade_test")
 
 
 ####################################################################################################### 
@@ -55,6 +53,8 @@ for (i in seq(hydrostations_sweden_spatial)){
     while (check_hydro == 0 & is_down_river == 0 ){
     # check if there is hydropower  
       temp <- se_ecrins_rivers@data %>% filter(TR %in% down_river_id)
+      print(temp$NXDownID)
+     
       if (nrow(temp) > 0){
         down_river_id <- as.character(temp$NXDownID)
         is_down_river <- temp$IS_D
@@ -68,7 +68,7 @@ for (i in seq(hydrostations_sweden_spatial)){
         sub_basin_NA[index_NA] <- down_river_id 
         index_NA <- index_NA + 1 
         is_down_river <- 1  
-        }
+      }
     }
  
   print(i)
@@ -105,16 +105,16 @@ hydro_power_conv_factor <- function(height){
 # prepare dataset for GAMS
 hydrostations_sweden_gams <- hydrostations_sweden_data %>% 
   select(shype_id, name, bidding_area, river, capacity, height, down_river_hp_dist, down_river_hp) %>% 
-  mutate(shype_id = paste("SHP_",shype_id, sep="")) %>%
-  mutate(bidding_area = paste("SE_",bidding_area, sep="")) %>%
+  mutate(shype_id = paste("SHP",shype_id, sep="")) %>%
+  mutate(bidding_area = paste("SE",bidding_area, sep="")) %>%
   mutate(minFlow = 0) %>%
   mutate(maxFlow = 1E6) %>%
-  mutate(maxReservoir = 1E6) %>%
+  mutate(maxReservoir = hydrostations_sweden_data$magasin) %>%
   mutate(hydro_conv_factor = hydro_power_conv_factor(height)) %>%
   mutate(maxHydPower = capacity / 1E3) %>%
-  mutate(river = paste("RS_",as.numeric(factor(as.character(river))), sep="")) %>% 
+  mutate(river = paste("RS",as.numeric(factor(as.character(river))), sep="")) %>% 
   group_by(bidding_area) %>% 
-  mutate(plant = paste("HP_", seq_along(bidding_area) , sep="")) %>% 
+  mutate(plant = paste("HP", seq_along(bidding_area) , sep="")) %>% 
   select(-height,-capacity)
 
 # replace downriver plant name by downriver plant ID
@@ -126,11 +126,13 @@ hydrostations_sweden_gams$name <- NULL
 # reorder columns
 hydrostations_sweden_gams <- hydrostations_sweden_gams[c("shype_id", "bidding_area", 
                             "river", "plant", "minFlow", "maxFlow", "maxReservoir", "maxHydPower", 
-                            "down_river_hp_dist", "hydro_conv_factor", "down_river_hp")]
+                            "down_river_hp_dist", "hydro_conv_factor", "down_river_hp", "name")]
 
 # rename columns  
 names(hydrostations_sweden_gams) <- c("id",	"Region",	"River",	"Plant",	"minFlow",	"maxFlow",	
-                                      "maxReservoir",	"maxHydPower",	"runOffDelay",	"hydroConvFact",	"downRiver")
+                                      "maxReservoir",	"maxHydPower",	"runOffDelay",	"hydroConvFact",	"downRiver", "name")
 
 save(hydrostations_sweden_gams, file = "results/hydro/hydrostations_sweden_gams.RData")
 write_feather(hydrostations_sweden_gams, path = "results/hydro/hydrostations_sweden_gams.feather")
+
+load("results/hydro/hydrostations_sweden_gams.RData")

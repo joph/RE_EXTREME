@@ -1,3 +1,0 @@
-id;Region;River;Plant;minFlow;maxFlow;maxReservoir;maxHydPower;runOffDelay;hydroConvFact;downRiver
-1.0;SE1;RS1;HP1;0.0;0.0;0.0;1e3;1.0;0.0;HP0
-2.0;SE1;RS1;HP2;0.0;0.0;0.0;1e3;1.0;0.0;HP1

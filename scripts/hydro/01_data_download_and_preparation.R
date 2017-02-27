@@ -16,11 +16,15 @@ source("scripts/hydro/00_load_libraries.R")
 
 ### Load Nuts3 regions data sets
 Sweden_Nuts3               <- readOGR(dsn = "gis_data/SE_NUTS3", layer = "SE_NUTS3")
-### Load Swedisch bidding areas (test file)
-se_bidding_areas           <- readOGR(dsn = "gis_data/elomrade", layer = "elomrade_test")
+
+### Load Swedisch bidding areas 
+#se_bidding_areas           <- readOGR(dsn = "gis_data/elomrade", layer = "elomrade_test") # (test file)
+se_bidding_areas           <- readOGR(dsn = "gis_data/net_top_secret/elomraden", layer = "elomraden")
+
 ### Load hype data sets
 ehype_subbasins_EU         <- readOGR(dsn = "gis_data/ehype_riverbasins", layer = "e-hype3_subids")
 shype_subbasins_Sweden     <- readOGR(dsn = "gis_data/shype_riverbasins", layer = "Sweden_Riverbasins_SubID")
+
 
 ### Load Ecrin data ###
 # switch working directory
@@ -45,6 +49,9 @@ shype_subbasins_Sweden     <- readOGR(dsn = "gis_data/shype_riverbasins", layer 
 
 
 ### adjust projections if they are not identical
+if(!identical(proj4string(hydrostations_sweden_spatial),proj4string(se_bidding_areas))){
+    se_bidding_areas <-  spTransform(se_bidding_areas, CRS(hydrostations_sweden_spatial@proj4string@projargs))  
+  }  
 if(!identical(proj4string(Sweden_Nuts3),proj4string(ehype_subbasins_EU))){
   Sweden_Nuts3 <-  spTransform(Sweden_Nuts3, CRS(ehype_subbasins_EU@proj4string@projargs))  
   }
@@ -96,8 +103,8 @@ for (i in seq(nrow(hydrostations_sweden_data))){
   closest_id <- which.min(gDistance(as(hydrostations_sweden_spatial_ETRS89[i,],"SpatialPoints"),se_ecrins_rivers_ETRS89, byid = TRUE )) 
   se_ecrins_rivers_data_hp[i,]  <- as_tibble(se_ecrins_rivers_ETRS89@data[closest_id,])
   
-  hydrostations_sweden_spatial$ehype_id[i]  <- temp@data$SUBID
-  hydrostations_sweden_spatial$shype_id[i]  <- as.character(temp2@data$SUBID)
+  hydrostations_sweden_spatial$ehype_id[i]     <- temp@data$SUBID
+  hydrostations_sweden_spatial$shype_id[i]     <- as.character(temp2@data$SUBID)
   hydrostations_sweden_spatial$ecr_basin_id[i] <- as.character(se_ecrins_rivers_data_hp[i,]$Bas0_ID) 
   hydrostations_sweden_spatial$ecr_river_id[i] <- as.character(se_ecrins_rivers_data_hp[i,]$River_ID)
   hydrostations_sweden_spatial$ecr_trunk_id[i] <- as.character(se_ecrins_rivers_data_hp[i,]$TR)
@@ -113,16 +120,16 @@ remove(se_ecrins_rivers_ETRS89, hydrostations_sweden_spatial_ETRS89)
 
 
 ####################################################################################################### 
-#####   Add bidding zone information,  preselect hydrostations and prepare GAMS input file        #####
+#####   Add price zone information,  preselect hydrostations and prepare GAMS input file        #####
 ####################################################################################################### 
 
 # add information of bidding zone to hydro station dataset
 hydrostations_sweden_spatial@data$bidding_area <- NA
 
-for (i in seq(se_bidding_areas@data$elomrade)){
-  temp <- se_bidding_areas[which(se_bidding_areas@data$elomrade == i),]
-  temp_hydro_sel = hydrostations_sweden_spatial[!is.na(over(hydrostations_sweden_spatial,as(temp,"SpatialPolygons"))),]
-  elomrade_hydro_list <- as.character(temp_hydro_sel@data$name)
+for (i in seq(se_bidding_areas@data$snitt)){
+  temp <- se_bidding_areas[which(se_bidding_areas@data$snitt == i),]
+  temp_hydro_sel <- hydrostations_sweden_spatial[!is.na(over(hydrostations_sweden_spatial,as(temp,"SpatialPolygons"))),]
+  elomrade_hydro_list <- temp_hydro_sel@data$name
   hydrostations_sweden_spatial@data$bidding_area[which(hydrostations_sweden_spatial@data$name %in% elomrade_hydro_list)] <- i
   print(i)
 }
@@ -165,8 +172,8 @@ save(se_shype_basins_hp, file = "data/hydro/se_shype_basins_hp.RData")
 save(hydrostations_sweden_spatial, file = "data/hydro/hydrostations_sweden_spatial.RData")
 
 # TODO implement shapefile export
-names(hydrostations_sweden_spatial@data)
-writeOGR(obj=hydrostations_sweden_spatial, dsn="results/gis", layer="hydro_stations_se", driver="ESRI Shapefile", overwrite_layer=TRUE)
+#names(hydrostations_sweden_spatial@data)
+#writeOGR(obj=hydrostations_sweden_spatial, dsn="results/gis", layer="hydro_stations_se", driver="ESRI Shapefile", overwrite_layer=TRUE)
 
 # save selected subbasins into download list for time series data from ehype / shype
 ehype_subids_download <- as.character(hydrostations_sweden_spatial@data$ehype_id)
@@ -265,5 +272,61 @@ ts_shype_nat <- ts_shype_nat %>% gather(basin_id,runoff,-date)  %>%  mutate(type
 ts_shype <- bind_rows(ts_shype_tot, ts_shype_cor, ts_shype_nat)
 
 # save
-save(ts_shype, file = "data/hydro/ts_shype.RData")
 write_feather(ts_shype, path = "data/hydro/ts_shype.feather")
+
+####################################################################################################### 
+#####          Load and combine scenarios for wind time series from Olauson et al                 #####
+####################################################################################################### 
+
+#### import wind farm locations                                                                   #####
+wind_farms <- read_delim("~/Dropbox/Formas/HydroSweden/data/wind/WECs.csv", ";", escape_double = FALSE, 
+              col_names = FALSE, comment = "%", trim_ws = TRUE)
+
+names(wind_farms) <- c("scenario","east_sweref99tm","north_sweref99tm","capacity_kw","rotor_diameter","hub_height","est_annual_prod_mwh",
+  "grid_conection_date","region", "turbine_number", "type", "farm_id",  "latitude_wgs88" ,"longitude_wgs84")
+
+# function for convering Matlab time format
+Matlab2Rdate <- function(val) as.Date(val - 1, origin = '0000-01-01') 
+# convert grid connection date from matlab time format
+wind_farms$grid_conection_date <-  Matlab2Rdate(wind_farms$grid_conection_date)
+
+# spatial wind_farms dataset
+wind_farms_spatial <- SpatialPointsDataFrame(coords = wind_farms[,c("longitude_wgs84","latitude_wgs88")], data = wind_farms, proj4string = CRS(hydrostations_sweden_spatial@proj4string@projargs))
+
+# plot wind_farms_spatial
+plot(wind_farms_spatial)
+plot(Sweden_Nuts3, add=TRUE)
+
+#### import scenarios                                                                             #####
+ts_wind_all <- NULL
+wind_scenarios <- c(paste("A",seq(1:7),sep = ""),paste("B",seq(1:7),sep = ""),paste("C",seq(1:7),sep = ""), "D1")
+
+ts_wind_time <- read_delim("~/Dropbox/Formas/HydroSweden/data/wind/Time.csv", ";", escape_double = FALSE, 
+                         col_names = TRUE, trim_ws = TRUE)
+names(ts_wind_time) <- "date"
+
+for (i in seq_along(wind_scenarios)){
+  # wind_scenarios <- "A1"
+  temp <- read_delim(paste("~/Dropbox/Formas/HydroSweden/data/wind/",wind_scenarios[i],".csv",sep=""), ";", 
+                     escape_double = FALSE, col_names = TRUE, trim_ws = TRUE)
+  names(temp)[1] <- "SE"
+  
+  ts_wind <- cbind(ts_wind_time, temp) %>% 
+    gather(2:6, key="region",value="mwh") %>% 
+    mutate(scenario = wind_scenarios[i]) %>% 
+    select(date, scenario, region, mwh)
+  
+  # save all scenarios in one file
+  if(is.null(ts_wind_all)){
+    ts_wind_all <- ts_wind
+  }else{
+    ts_wind_all <- rbind(ts_wind_all,ts_wind)
+  }
+  print(paste("Scenario", wind_scenarios[i], "added"))
+
+}
+
+write_feather(ts_wind_all, path = "data/wind/ts_wind_all.feather")
+
+
+

@@ -1,0 +1,10 @@
+- adapt capacity of hydropower plants (95%!) 1.56E+07 KW (reduced set) vs. 1.66E+07 KW (all plants): 1.064103
+- adapt generation of hydropower plants: 63086093 (reduced set) 66397461 (all plants):1.05
+- scenarios for transmission capacity: no capacity vs. 600+615 + 1300 +740 +2145 + 600 + 250 +700 + 1100 + 1200: 9.25GW (from alexis file)
+- total reservoir capacity sweden: 33.7TWh
+http://www.svenskenergi.se/Global/Statistik/Aktuellt%20kraftläge/Kraftläget-Sverige-grafer-tabeller.pdf
+- anpassen flow von wasser (abziehen, was von oben automatisch kommt)
+
+
+Error in `row.names<-.data.frame`(`*tmp*`, value = c("1983-01-01", "1983-01-02",  : 
+  missing values in 'row.names' are not allowed

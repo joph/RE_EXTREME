@@ -1,65 +1,94 @@
-source("libraries.R")
+source("scripts/libraries.R")
 
 
 
 prepareFullRun<-function(period,
+                         out="../gms_execute/input_tr.gdx",
                          hydFile="../data/hydro/hydro_data.csv",
-                         hydFeather="../data/hydro/timeseries.feather",
+                         hydFeather="../data/hydro/shype_hydro_nat_ts.feather",
                          windFeather="../data/wind/wind_1979_2014.feather",
+                         solarFeather="../data/solar/solar_GAMS.feather",
                          loadFeather="../data/load/load_2007_2015.feather",
-                         transmissionFeather="../data/transmission/lineCapacities.feather",
+                         transmissionCSV="../data/transmission/lineCapacities.csv",
                          investCSV="../data/investOptions/investOpts.csv",
+                         intermittentCSV="../data/investOptions/intermittentOpts.csv",
                          costsCSV="../data/costs/costs.csv"){
 
   
-   hydroData<-read_delim(hydFile,delim=";")
-   hydroTimeSeries<-read_feather(hydFeather) %>%
-   filter(Time>=period[1]&Time<=period[2]) 
+  print("Preparing hydro data...")
+  ptm <- proc.time()
+  hydroData<-read_delim(hydFile,delim=";") 
+  
+  hydroTimeSeries<-read_feather(hydFeather) %>%
+    filter(date>=period[1]&date<=period[2]) %>% 
+    mutate(Index=as.numeric(substr(region,3,100))) %>% 
+    select(date,Index,mwh)
+  
+  
   
   hydroPs<-prepareHydroParameters(hydroData,hydroTimeSeries)
   
-  rf<-read_feather(windFeather)  %>%
-    filter(Date>=period[1]&Date<=period[2]) 
+  print(paste("Elapsed",(proc.time() - ptm)))
+  ptm <- proc.time()
+  print("Preparing intermittent data...")
+  wind<-read_feather(windFeather)  %>%
+    filter(Date>=period[1]&Date<=period[2]) %>% mutate(iTechnology="Wind") %>% select(Date,R,P,iTechnology,capFact)
+  
+  pv<-read_feather(solarFeather) %>%
+    filter(Date>=period[1]&Date<=period[2]) %>% mutate(iTechnology="PV") %>% select(Date,R,P,iTechnology,capFact)
+  
+  rf<-bind_rows(wind,pv)
   
   intermittentPs<-prepareIntermittentParameters(rf)
-  
+  print(paste("Elapsed",(proc.time() - ptm)))
+  ptm <- proc.time()
+  print("Preparing load data...")
   load<-read_feather(loadFeather)  %>%   
     filter(Date>=period[1]&Date<=period[2]) 
   
   loadPs<-prepareLoadParameter(load)
   
-  cap<-read_feather(transmissionFeather)
+  cap<-read_delim(transmissionCSV,delim=";") 
   transmissionPs<-prepareTransmissionParameters(cap)
   
   investOpts<-read_delim(investCSV,delim=";")
   investPs<-prepareInvestOptsParameters(investOpts)
   
-  costs<-read_delim(costsCSV,delim=";")
-  costsPs<-prepareCostsParameters(costs)
+  intermittentOpts<-read_delim(intermittentCSV,delim=";")
+  intermittentOptPs<-prepareIntermittentOptsParameters(intermittentOpts)
   
   ####length & t-index
-  s<-seq(as.POSIXct(period[1]),as.POSIXct(period[2]),by="h") %>% length
-  setT<-createUEL("T",1:s) 
+  s<-seq(as.POSIXct(period[1]),as.POSIXct(period[2]),by="h") 
+  setT<-list(format(s,"%Y%m%d%H%M"))
   setUEL<-list(createSET("t",setT))
-  length<-tibble(paste("T",1:s,sep=""),rep(1,length(s)))
-  lengthPs<-tidyToGDXparam("length",length,c(1),list("T"),2) %>%
+  length<-tibble(setT[[1]],rep(1,length(s)))
+  lengthPs<-tidyToGDXparam("length",length,c(1),2) %>%
     list
   
   ######WHAT LACKS
   ######INCORPORATING VARIABLE TIME LENGTH!!!
-  combine<-c(hydroPs,intermittentPs,loadPs,transmissionPs,investPs,lengthPs,setUEL,costsPs)
-  writeToGDXList(combine,"../../gms_execute/input_tr.gdx")
+  combine<-c(hydroPs,
+              intermittentPs,
+              loadPs,
+              investPs,
+              transmissionPs,
+              lengthPs,
+              intermittentOptPs,
+              setUEL)
+  
+  writeToGDXList(combine,out)
+  print(paste("Elapsed",(proc.time() - ptm)))
 }
 
 ###runs gams file and reads results
-runGAMSReadResults<-function(){
+runGAMS<-function(){
   
   
   
-  setwd(paste(base_dir,"/../../gms_execute",sep=""))
+  setwd(paste(base_dir,"/../gms_execute",sep=""))
   gams("../RE_EXTREME/gms_source/changing_time_resolution.gms")
   setwd(base_dir)
-  return(readResults("results_time_resolution.gdx"))
+ 
 }
 
 ####helper function
@@ -70,19 +99,23 @@ substringAd<-function(x,length){
 }
 
 ####write tidy data to GDX
-tidyToGDXparam<-function(name,tb,uelColumns,uelPrefix,valColumn){
+####SPEED UP THIS CODE!
+tidyToGDXparam<-function(name,tb,uelColumns,valColumn){
   ###uels->to numeric
-  start<-sapply(uelPrefix,nchar)
-  m<-mapply(substringAd,select(tb,uelColumns),start)
-  if(is.vector(m)){
-    m<-as.data.frame(t(m))
-  }
-  leadingIndexUEL<-as_tibble(m)
+  start<-sapply(tb[,uelColumns],
+                function(x){
+                  as.numeric(factor(unlist(x),
+                                    levels=unique(sort(unlist(x)))
+                                    ))
+                  }
+                )
+  
+  leadingIndexUEL<-as_tibble(start)
   value<-bind_cols(leadingIndexUEL,tibble(tb[[valColumn]]))
+
   
   ###generate uels
-  uels_<-sapply(apply(leadingIndexUEL,2,max),seq,from=1,simplify=FALSE)
-  uels_<-mapply(paste,uelPrefix,uels_,sep="",SIMPLIFY=FALSE)
+  uels_<-sapply(tb[,uelColumns],function(x){as.character(sort(unique(x)))},simplify=FALSE)
   
   ###create param
   return(createPARAM(name,value,uels_,dim=length(uelColumns)))
@@ -91,7 +124,10 @@ tidyToGDXparam<-function(name,tb,uelColumns,uelPrefix,valColumn){
 
 ###prepares the basic parameters for hydropower production
 prepareHydroParameters<-function(hydroData,hydroTimeSeries){
-  
+  hydroData$Region=paste("SE",sprintf("%03d", as.numeric(substring(hydroData$Region,3,100))),sep="")
+  hydroData$River=paste("RS",sprintf("%03d", as.numeric(substring(hydroData$River,3,100))),sep="")
+  hydroData$downRiver=paste("HP",sprintf("%03d", as.numeric(substring(hydroData$downRiver,3,100))),sep="")
+  hydroData$Plant=paste("HP",sprintf("%03d", as.numeric(substring(hydroData$Plant,3,100))),sep="")
   
   
   
@@ -103,13 +139,12 @@ prepareHydroParameters<-function(hydroData,hydroTimeSeries){
               "runOffDelay",
               "hydroConvFact")
   uels<-2:4
-  uelNames<-list("SE","RS","HP")
   valColumns<-names
   
   params<-mapply(tidyToGDXparam,
          name=names,
          valColumn=valColumns,
-         MoreArgs=list(tb=hydroData,uelColumns=uels,uelPrefix=uelNames),
+         MoreArgs=list(tb=hydroData,uelColumns=uels),
          SIMPLIFY=FALSE
   )
   
@@ -125,23 +160,21 @@ prepareHydroParameters<-function(hydroData,hydroTimeSeries){
   params[[length(params)+1]]<-tidyToGDXparam(name="upRiver",
                                              tb=upRiver,
                                              uelColumns=1:4,
-                                             uelPrefix=list("SE","RS","HP","HP"),
                                              valColumn="val")
   
   ###join hydro timeseries...
-
   outTs<-inner_join(hydroData,hydroTimeSeries,by=c("id"="Index")) 
   nmbDivisions<-nrow(unique(outTs[,2:4]))
+  TimeIndex<-format(outTs$date,"%Y%m%d%H%M")
+  
   outTs<-mutate(outTs,
-                TimeIndex=paste("T",rep(c(1:(nrow(outTs)/nmbDivisions)),nmbDivisions),
-                                sep=""))
+                TimeIndex=TimeIndex)
   
   
   params[[length(params)+1]]<-tidyToGDXparam(name="hydro",
                  tb=outTs,
                  uelColumns=c(2,ncol(outTs),3:4),
-                 uelPrefix=list("SE","T","RS","HP"),
-                 valColumn="HydropowerProduction")
+                 valColumn="mwh")
   
   
   
@@ -151,15 +184,16 @@ prepareHydroParameters<-function(hydroData,hydroTimeSeries){
 
 ###prepares the basic parameters for windpower production
 prepareIntermittentParameters<-function(rf){
+  rf$R=paste("SE",sprintf("%03d", as.numeric(substring(rf$R,3,100))),sep="")
+  rf$P=paste("P",sprintf("%03d", as.numeric(substring(rf$P,2,100))),sep="")
   
+  TimeIndex<-format(rf$Date,"%Y%m%d%H%M")
   rf<-mutate(rf,
-             TimeIndex=paste("T",rep(1:(nrow(rf)/length(unique(rf$R))),length(unique(rf$R))),
-                             sep=""))
+             TimeIndex=TimeIndex) %>% select(R,TimeIndex,P,iTechnology,capFact)
   
   tidyToGDXparam(name="intermittent",
                  tb=rf,
-                 uelColumns=c(2,ncol(rf),4),
-                 uelPrefix=list("SE","T","P"),
+                 uelColumns=c(1:4),
                  valColumn="capFact") %>%
         list() %>%
     return()
@@ -167,15 +201,14 @@ prepareIntermittentParameters<-function(rf){
 
 #prepares the load parameter
 prepareLoadParameter<-function(load){
-  
+  load$Region=paste("SE",sprintf("%03d", as.numeric(substring(load$Region,3,100))),sep="")
+  TimeIndex<-format(load$Date,"%Y%m%d%H%M")
   load<-mutate(load,
-             TimeIndex=paste("T",rep(1:(nrow(load)/length(unique(load$Region))),length(unique(load$Region))),
-                             sep=""))
+             TimeIndex=TimeIndex)
   
   tidyToGDXparam(name="load",
                  tb=load,
                  uelColumns=c(2,ncol(load)),
-                 uelPrefix=list("SE","T"),
                  valColumn="Load") %>%
     list() %>%
     return()
@@ -185,10 +218,12 @@ prepareLoadParameter<-function(load){
 
 ###prepare transmission parameters
 prepareTransmissionParameters<-function(cap){
+  cap$Region1=paste("SE",sprintf("%03d", as.numeric(substring(cap$Region1,3,100))),sep="")
+  cap$Region2=paste("SE",sprintf("%03d", as.numeric(substring(cap$Region2,3,100))),sep="")
+  
   tidyToGDXparam(name="transmissionCap",
                  tb=cap,
                  uelColumns=c(2:3),
-                 uelPrefix=list("SE","SE"),
                  valColumn="Max") %>%
     list() %>%
     return()
@@ -196,11 +231,26 @@ prepareTransmissionParameters<-function(cap){
 }
 
 prepareInvestOptsParameters<-function(io){
+  io$Region=paste("SE",sprintf("%03d", as.numeric(substring(io$Region,3,100))),sep="")
+  io$P=paste("P",sprintf("%03d", as.numeric(substring(io$P,2,100))),sep="")
+  
   tidyToGDXparam(name="investOptions",
                  tb=io,
-                 uelColumns=c(2:4),
-                 uelPrefix=list("SE","P","TEC"),
-                 valColumn="Val") %>%
+                 uelColumns=c(2:5),
+                 valColumn="Value") %>%
+    list() %>%
+    return()
+  
+}
+
+prepareIntermittentOptsParameters<-function(io){
+  io$Region=paste("SE",sprintf("%03d", as.numeric(substring(io$Region,3,100))),sep="")
+  io$P=paste("P",sprintf("%03d", as.numeric(substring(io$P,2,100))),sep="")
+  
+  tidyToGDXparam(name="intermittentOptions",
+                 tb=io,
+                 uelColumns=c(2:5),
+                 valColumn="Value") %>%
     list() %>%
     return()
   
@@ -264,8 +314,8 @@ createPARAM<-function(name,value,uels,dim=1){
 ###and contains the set(s) for that variable.
 readResultsGeneric<-function(f,names){
   
-  setwd(paste(base_dir,"/../../gms_execute",sep=""))
-  res<-sapply(names,function(x,file){return(rgdx(file,list(name=x)))},f,simplify=FALSE)
+  setwd(paste(base_dir,"/../gms_execute",sep=""))
+  res<-sapply(names,function(x,file){return(rgdx(file,squeeze=FALSE,list(name=x)))},f,simplify=FALSE)
   
   names(res)<-names
   setwd(base_dir)
@@ -297,42 +347,92 @@ readSingleSymbolGDX<-function(symbol){
 
 
 #####read input of file and construct large-data.frame with results
-readResults<-function(f){
-  
-  
-  timeResolutionVars<-list("x_term",
-                        "x_renew",
-                        "x_hydro",
-                        "x_spill",
-                        "x_h_stor_in",
-                        "x_h_stor_out",
-                        "x_h_stor_lv",
-                        "x_hyd_up",
-                        "x_stor_in",
-                        "x_stor_out",
-                        "x_stor_lev",
-                        "x_curtail",
-                        "x_loss",
-                        "x_transfer",
-                        "load",
-                        "length",
-                        "hydro",
-                        "intermittent",
-                        "x_invest_thermal_cap",
-                        "x_invest_storage",
-                        "x_invest_intermittent")
-  
+
+readTimeResults<-function(f,timeResolutionVars,period){
     
   timeVar<-readResultsGeneric(f,timeResolutionVars) %>% sapply(readSingleSymbolGDX,simplify=FALSE)
   
-  timeIndex<-select(timeVar[[14]],3) 
-  timeIndex<-bind_cols(timeIndex,tibble(as.numeric(substr(timeIndex$t,2,nchar(timeIndex$t)))))
+  timeVar<-bind_rows(timeVar) %>% 
+    mutate(TT=t) %>% mutate(datetime=as.POSIXct(TT,format="%Y%m%d%H%M")) 
   
-  hh<-hash(keys=timeResolutionVars,values=timeVar)
+  timeVar %>% return()
+
+}
+
+
+readModelResults<-function(in_,f,period,runname){
+  timeResolutionVars<-list("x_term",
+                           "x_renew",
+                           "x_hydro",
+                           "x_spill",
+                           "x_h_stor_in",
+                           "x_h_stor_out",
+                           "x_h_stor_lv",
+                           "x_hyd_up",
+                           "x_stor_in",
+                           "x_stor_out",
+                           "x_stor_lev",
+                           "x_curtail",
+                           "load",
+                           "transfer_net",
+                           "x_transfer",
+                           "x_invest_thermal_cap",
+                           "x_invest_storage",
+                           "x_invest_intermittent",
+                           "bal_",
+                           "hydro")
   
-  return(hh)
+  dir.create(file.path("runs/", runname), showWarnings = FALSE)
+  file.copy(paste("../gms_execute/",f,sep=""),paste("runs/",runname,sep=""))
+  file.copy(paste("../gms_execute/",in_,sep=""),paste("runs/",runname,sep=""))
+  file.copy(paste("gms_source/","changing_time_resolution.gms",sep=""),paste("../runs/",runname,sep=""))
+  return(readTimeResults(f,timeResolutionVars,period))
+}
+
+readModelResultsAG<-function(in_,f,period,runname){
+  timeResolutionVars<-list("x_term",
+                           "x_renew",
+                           "x_hydro",
+                           "x_spill",
+                           "x_h_stor_in",
+                           "x_h_stor_out",
+                           "x_h_stor_lv",
+                           "x_hyd_up",
+                           "x_stor_in",
+                           "x_stor_out",
+                           "x_stor_lev",
+                           "x_curtail",
+                           "load",
+                           "transfer_net",
+                           "x_transfer",
+                           "x_invest_thermal_cap",
+                           "x_invest_storage",
+                           "x_invest_intermittent",
+                           "bal_",
+                           "hydro")
+  
+  dir.create(file.path("../runs/", runname), showWarnings = FALSE)
+  file.copy(paste("../gms_execute/",f,sep=""),paste("../runs/",runname,sep=""))
+  file.copy(paste("../gms_execute/",in_,sep=""),paste("../runs/",runname,sep=""))
+  file.copy(paste("gms_source/","changing_time_resolution.gms",sep=""),paste("../runs/",runname,sep=""))
+  return(readTimeResults(f,timeResolutionVars,period))
+}
+
+readModelResultsTransfer<-function(f,period){
+  vars<-list("x_transfer")
+  var<-readResultsGeneric(f,vars) %>% sapply(readSingleSymbolGDX,simplify=FALSE)
+  
+  var<-bind_rows(var) %>% 
+    mutate(TT=t) %>% mutate(Time=as.numeric(substr(TT,2,100)))
+  
+  timeSeq<-tibble(datetime=seq(as.POSIXct(period[1]),as.POSIXct(period[2]),"h")) %>% 
+    mutate(ord=order(datetime))
+  
+  inner_join(var,timeSeq,by=c("Time"="ord")) %>% return()
+  
   
 }
+
 
 
 calculateCompleteRegionalDS<-function(results){
@@ -357,9 +457,10 @@ calculateCompleteRegionalDS<-function(results){
   
   reg_t<-c("x_curtail",
          "x_loss",
-    "load")
+         "load")
   
-  reg_reg_t<-c("x_transfer")
+  reg_reg_t<-c("x_transfer_in",
+               "x_transfer_out")
   
   t<-c("length")
   

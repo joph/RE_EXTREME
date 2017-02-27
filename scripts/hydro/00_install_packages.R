@@ -12,11 +12,10 @@
 # feather - read and write feather files, a lightweight binary columnar data store designed for maximum speed.
 # foreign - functions to load data files from other programs into R.
 
-library(readxl)
-library(readr)
-library(feather)
-library(foreign)
-#library(MASS)
+install.packages("readxl")
+install.packages("readr")
+install.packages("feather")
+install.packages("foreign")
 
 ####################################################################################################### 
 #####                                  Data manipulation                                          #####
@@ -32,16 +31,16 @@ library(foreign)
 # xts       - functionalities to work on time-indexed data. xts extends zoo, 
 #             another popular package for time-series analysis.
 
-library(dplyr)
-library(tidyr)
-library(stringr)
-library(lubridate)
-library(broom)
+install.packages("dplyr")
+install.packages("tidyr")
+install.packages("stringr")
+install.packages("lubridate")
+install.packages("broom")
 
-#library(tidyverse)
-library(reshape2)
-library(zoo)
-library(xts)
+install.packages("tidyverse")
+install.packages("reshape2")
+install.packages("zoo")
+install.packages("xts")
 
 ####################################################################################################### 
 #####                         Tools for working with spatial data                                 #####
@@ -51,26 +50,26 @@ library(xts)
 # rgeos         - R’s interface to the powerful vector processing library geos
 # ggmap         - add maps straight from Google maps as a background in your ggplots.
 
-library(sp)
-library(maptools)
-library(rgdal)
-library(rgeos)
-library(ggmap)
+install.packages("sp")
+install.packages("maptools")
+install.packages("rgdal")
+install.packages("rgeos")
+install.packages("ggmap")
 
 
 ####################################################################################################### 
 #####                              plotting and reporting                                        #####
 ####################################################################################################### 
-# ggplot2 - create beautiful, layered and customizable plots (using the grammar of graphics)
-# plotly  - turns ggplots interactive and allows to be drawn with D3
+# ggplot2    - create beautiful, layered and customizable plots (using the grammar of graphics)
+# plotly     - turns ggplots interactive and allows to be drawn with D3
 # R Markdown - authoring framework for data science
 #            - save and execute code & generate high quality reports that can be easily shared 
 # Pander     - designed to provide a minimal and easy tool for rendering R objects into Pandoc’s markdown
 
-library(ggplot2)
-library(plotly)
-library(rmarkdown)
-library(pander)
+install.packages("ggplot2")
+install.packages("plotly")
+install.packages("rmarkdown")
+install.packages("pander")
 
 ####################################################################################################### 
 #####                              other useful packages                                          #####
@@ -79,14 +78,6 @@ library(pander)
 # magrittr  - decrease development time and improve readability and maintainability of code by using pipes %>% 
 # tibble    - modern take on data frames. It encapsulates best practices for creating data frames
 
-library(purrr)
-library(magrittr)
-library(tibble)
-
-
-
-
-
-
-
-
+install.packages("purrr")
+install.packages("magrittr")
+install.packages("tibble")

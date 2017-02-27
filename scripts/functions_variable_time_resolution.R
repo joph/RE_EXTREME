@@ -16,39 +16,43 @@ generateVariableResolutionTimeSeries<-function(hourly_load,intermittent_hourly,h
   hydro_intermittent_prod<-data.frame(intermittent_hourly*renewable_scaling,hydropower_hourly)
   all_production<-apply(hydro_intermittent_prod,1,sum)
   
-  residual_production<-(all_production-hourly_load)
+  #all_production<-w$s
+  lower<--8000
+  upper<-8000
+  
+  residual_production<-(hourly_load-all_production*2.5)
+  residual_production<-(residual_production[,1])
   le1<-rle(residual_production<lower|residual_production>upper)
   ress<-rep(le1$lengths >= threshhold & le1$values,times = le1$lengths)
  
   if(plot){
-    plot(residual_production[limits],type="l")
+    Cairo("out.png",width=1500,height=1000,pointsize=25)
+    plot(residual_production[limits],type="l",xlab="Time (hours)",ylab="Residual load Curve")
     residual_production1<-residual_production
     residual_production1[ress==FALSE]<-NA
     lines(residual_production1[limits],col="red")
     lines(c(0,length(limits)),c(lower,lower),lty=2,col="blue")
     lines(c(0,length(limits)),c(upper,upper),lty=2,col="blue")
+    dev.off()
   }
   
   cc<-NA
-  for(i in seq(1,length(all_production),24)){
- 
-    df<-NA
+  df<-NA
+  for(i in seq(1,length(residual_production),24)){
+    print(i)
     if(sum(ress[i:(i+23)]==0)){
       #daily values
-      ren<-apply(intermittent_hourly[i:(i+23),],2,sum)
-      hyd<-apply(hydropower_hourly[i:(i+23),,drop=FALSE],2,sum)
-      df<-data.frame(t(c(ren)),t(c(hyd)),c(sum(hourly_load[i:(i+23)])),24)
+      ren<-(sum(residual_production[i:(i+23)]))
+      df<-c(df,ren)
     
       }
     else
       {
       #hourly values
-      df<-data.frame(intermittent_hourly[i:(i+23),],hydropower_hourly[i:(i+23),,drop=FALSE],hourly_load[i:(i+23)],1)
-    
+        
+      df<-c(df,residual_production[i:(i+23)])
     }
-    names(df)<-c(paste(1:ncol(intermittent_hourly),"renewable"),"hydro","load","multi")
-    cc<-rbind(cc,df)
-  
+
   }
   
 cc<-cc[2:nrow(cc),]

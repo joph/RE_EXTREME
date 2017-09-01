@@ -224,7 +224,7 @@ renewable(reg,t,p,iTechnology)$existsIntermittent(reg,p,iTechnology)
                       x_curtail(reg,t,p,iTechnology)     =E= intermittent(reg,t,p,iTechnology) * x_invest_intermittent(reg,p,iTechnology);
 
 renewable_maxCap(reg,p,iTechnology)$existsIntermittent(reg,p,iTechnology)
-               ..x_invest_intermittent(reg,p,iTechnology) =L= intermittentOptions(reg,p,iTechnology,"Investment");
+               ..x_invest_intermittent(reg,p,iTechnology) =L= intermittentOptions(reg,p,iTechnology,"MaxCap");
 
 
 *********hydropower production*********

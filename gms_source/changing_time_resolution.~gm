@@ -73,12 +73,12 @@ display sInter;
 
 parameter mult(runs,m);
 mult(runs,m)=1;
-mult("R2","M2")=0;
-mult("R3","M3")=10000;
-mult("R4","M4")=10000;
-mult("R5","M2")=0;
-mult("R5","M3")=10000;
-mult("R5","M4")=10000;
+*mult("R2","M2")=0;
+*mult("R3","M3")=10000;
+*mult("R4","M4")=10000;
+*mult("R5","M2")=0;
+*mult("R5","M3")=10000;
+*mult("R5","M4")=10000;
 
 
 parameter mult1(m);
@@ -224,7 +224,7 @@ renewable(reg,t,p,iTechnology)$existsIntermittent(reg,p,iTechnology)
                       x_curtail(reg,t,p,iTechnology)     =E= intermittent(reg,t,p,iTechnology) * x_invest_intermittent(reg,p,iTechnology);
 
 renewable_maxCap(reg,p,iTechnology)$existsIntermittent(reg,p,iTechnology)
-               ..x_invest_intermittent(reg,p,iTechnology) =L= intermittentOptions(reg,p,iTechnology,"Investment");
+               ..x_invest_intermittent(reg,p,iTechnology) =L= intermittentOptions(reg,p,iTechnology,"MaxCap");
 
 
 *********hydropower production*********

@@ -1,6 +1,7 @@
 source("scripts/libraries.R")
 
 
+#costsCSV="../data/costs/costs.csv"
 
 prepareFullRun<-function(period,
                          out="../gms_execute/input_tr.gdx",
@@ -11,18 +12,17 @@ prepareFullRun<-function(period,
                          loadFeather="../data/load/load_2007_2015.feather",
                          transmissionCSV="../data/transmission/lineCapacities.csv",
                          investCSV="../data/investOptions/investOpts.csv",
-                         intermittentCSV="../data/investOptions/intermittentOpts.csv",
-                         costsCSV="../data/costs/costs.csv"){
+                         intermittentCSV="../data/investOptions/intermittentOpts.csv"){
 
   
   print("Preparing hydro data...")
   ptm <- proc.time()
   hydroData<-read_delim(hydFile,delim=";") 
   
-  hydroTimeSeries<-read_feather(hydFeather) %>%
+  hydroTimeSeries<-read_feather(hydFeather)   %>%
     filter(date>=period[1]&date<=period[2]) %>% 
     mutate(Index=as.numeric(substr(region,3,100))) %>% 
-    select(date,Index,mwh)
+    dplyr::select(date,Index,mwh)
   
   
   
@@ -327,7 +327,10 @@ readResultsGeneric<-function(f,names){
 readSingleSymbolGDX<-function(symbol){
   name<-symbol$name
   if(symbol$dim==0){
-    
+    if(length(symbol$val)==1){
+      return(tibble(name=name,value=as.vector(symbol$val)))
+      
+    }
     return(tibble(name=name,value=symbol$val))
   }
   
@@ -381,10 +384,11 @@ readModelResults<-function(in_,f,period,runname){
                            "x_invest_intermittent",
                            "bal_",
                            "hydro")
+                             #"x_slack") 
   
-  dir.create(file.path("runs/", runname), showWarnings = FALSE)
-  file.copy(paste("../gms_execute/",f,sep=""),paste("runs/",runname,sep=""))
-  file.copy(paste("../gms_execute/",in_,sep=""),paste("runs/",runname,sep=""))
+  dir.create(file.path("../runs", runname), showWarnings = FALSE)
+  file.copy(paste("../gms_execute/",f,sep=""),paste("../runs/",runname,sep=""))
+  file.copy(paste("../gms_execute/",in_,sep=""),paste("../runs/",runname,sep=""))
   file.copy(paste("gms_source/","changing_time_resolution.gms",sep=""),paste("../runs/",runname,sep=""))
   return(readTimeResults(f,timeResolutionVars,period))
 }
@@ -421,14 +425,14 @@ readModelResultsAG<-function(in_,f,period,runname){
 readModelResultsTransfer<-function(f,period){
   vars<-list("x_transfer")
   var<-readResultsGeneric(f,vars) %>% sapply(readSingleSymbolGDX,simplify=FALSE)
+  return(var)
+  #var<-bind_rows(var) %>% 
+  #  mutate(TT=t) %>% mutate(Time=as.numeric(substr(TT,2,100)))
   
-  var<-bind_rows(var) %>% 
-    mutate(TT=t) %>% mutate(Time=as.numeric(substr(TT,2,100)))
+  #timeSeq<-tibble(datetime=seq(as.POSIXct(period[1]),as.POSIXct(period[2]),"h")) %>% 
+  #  mutate(ord=order(datetime))
   
-  timeSeq<-tibble(datetime=seq(as.POSIXct(period[1]),as.POSIXct(period[2]),"h")) %>% 
-    mutate(ord=order(datetime))
-  
-  inner_join(var,timeSeq,by=c("Time"="ord")) %>% return()
+  #inner_join(var,timeSeq,by=c("Time"="ord")) %>% return()
   
   
 }

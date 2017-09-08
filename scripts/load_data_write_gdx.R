@@ -1,7 +1,7 @@
-#base_dir<-"C:/Users/cancella/Google Drive/!IIASA/COPA/RE_EXTREME"
-base_dir<-"C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/RE_EXTREME"
-#gams_dir<-"C:/GAMS/win64/24.8"
-gams_dir<-"C:/GAMS/win64/24.7"
+base_dir<-"C:/Users/cancella/Google Drive/!IIASA/COPA/RE_EXTREME"
+#base_dir<-"C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/RE_EXTREME"
+gams_dir<-"C:/GAMS/win64/24.8"
+#gams_dir<-"C:/GAMS/win64/24.7"
 
 setwd(base_dir)
 source("scripts/functions_gdx_transfer.R")
@@ -11,8 +11,8 @@ source("scripts/function_raw_data_input.R")
 #period<-c("2007-01-02 00:00:00 CET"
  #          ,"2008-12-31 23:00:00 CET")
 
-period<-c("2012-07-01 00:00:00 CET"
-         ,"2012-07-31 23:00:00 CET")
+period<-c("2012-01-01 01:00:00 CET"
+         ,"2012-12-31 23:00:00 CET")
 
 ############Create model run
 prepareFullRun(period,
@@ -32,11 +32,11 @@ prepareFullRun(period,
 results<-readModelResults("input_tr.gdx",
                           "results_time_resolution.gdx",
                           period,
-                          "2_br_complete")
+                          "yearly_full_run")
 
 totalCost <- readResultsGeneric("results_time_resolution.gdx", 
                    c("totalCost")) %>% sapply(readSingleSymbolGDX,simplify=FALSE)
-
+totalCost
 #############Show results as Figures
 r_region<- results %>% filter(!is.na(reg)) %>% 
   group_by(name,reg,datetime) %>% 
@@ -110,7 +110,10 @@ ggsave("../results/figures/opt_hydro_bal.pdf",fig02,width=30,height=20,units="cm
 
 ###############Storage Level###############
 r_storage_weekly <- r_region_weekly %>% filter(name=="x_h_stor_lv")
-r_storage_weekly %>% ggplot(aes(x=dat_,y=value)) + geom_line() + facet_wrap(~reg)
+fig03 <- r_storage_weekly %>% ggplot(aes(x=dat_,y=value)) + geom_line() + facet_wrap(~reg)
+plot(fig03)
+ggsave("../results/figures/storage_level.pdf",fig03,width=30,height=20,units="cm")
+
 ###############transfer###############
 #transfer<-readModelResultsTransfer("results_time_resolution.gdx",period)$x_transfer %>% 
   #mutate(t=ymdhm(t))

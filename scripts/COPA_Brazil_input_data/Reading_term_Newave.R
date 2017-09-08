@@ -8,7 +8,7 @@ setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Costs/deck_newav
 #setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Costs/deck_newave_2017_05")
 
 term <- as_tibble(read.delim("TERM_new.DAT", header = TRUE, sep = "", quote = "\"",
-                               dec = ".", fill = TRUE, comment.char = ""))
+                             dec = ".", fill = TRUE, comment.char = ""))
 
 # Removing the lines with plants with variable cost = 0 and fuel type = "contrato" (contract in english)
 # Reading the file with the plants to be withdrawn 

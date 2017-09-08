@@ -43,6 +43,18 @@ regions_final <- (c(rep("SE3",(nrow(load_final)) / 4),
 
 load_final<-load_final %>% mutate(Region=regions_final)
 
+# Veriying NAs because of summer time
+sum(is.na(load_final$Load))
+
+localizing_NA <- load_final[which(is.na(load_final$Load)),] # We have 4 NAs in 2012 and 4 in 2013.
+
+# Replacing NAs
+load_final$Load[load_final$Date == "2012-10-21 03:00:00 UTC"] <- 
+  c(load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE3"],
+    load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE4"],
+    load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE1"],
+    load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE2"])
+
 #setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/Data/load")
 setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/Data/load")
 write_feather(load_final,"load_Br_2014.feather")
@@ -50,3 +62,7 @@ write.table(load_final, file = "load_Br_2014.csv", sep =";", row.names = F)
 
 # Plotting
 load_final %>% ggplot(aes(x=Date,y=Load)) + geom_line(aes(col=Region)) 
+
+# Reading the load_Br_2014.feather
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/load")
+#load_br <- read_feather("load_Br_2014.feather")

@@ -7,20 +7,22 @@ sum(renew$value)
 renew_summary <- renew %>% group_by(reg, datetime, iTechnology) %>% summarise(renew_gen = sum(value))
 renew_summary1 <- renew %>% group_by(reg,iTechnology) %>% summarise(renew_gen = sum(value))
 
-ggplot() + 
+renew_gen_fig <- ggplot() + 
   geom_line(data = renew_summary, aes(x = datetime, y = renew_gen, col = iTechnology), size = 1) +
   facet_wrap(~reg) +  ylab("MWh ") + xlab("") + 
   ggtitle("Renewable generation" ) + theme(plot.title = element_text(hjust = 0.5))
+plot(renew_gen_fig)
+#ggsave("../results/figures/renewable_generation.pdf",renew_gen_fig,width=30,height=20,units="cm")
 
 #### Thermal generation ####
 x_term <- results %>% filter(name == "x_term")
 summary <- x_term %>% group_by(reg, datetime) %>% summarise(x_term = sum(value))
-#thermal_gen <- 
-ggplot() +
+thermal_gen <- ggplot() +
   geom_line(data = summary, aes(x = datetime, y = x_term, col = reg), size = 1) + # By the time we have many thermal technologies, we change col = reg by col = iTechnology
   facet_wrap(~reg) +   ylab("MWh ") + xlab("") + 
   ggtitle("Thermal generation" ) + theme(plot.title = element_text(hjust = 0.5))
-#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/2_br_complete/x_term.pdf",thermal_gen,width=30,height=20,units="cm")
+plot(thermal_gen)
+#ggsave("../results/figures/thermal_gen.pdf",thermal_gen,width=30,height=20,units="cm")
 
 #### System expansion ####
 x_invest_intermittent <- results %>% filter(name == "x_invest_intermittent")
@@ -28,14 +30,14 @@ x_invest_thermal_cap <- results %>% filter(name == "x_invest_thermal_cap")
 invest <- rbind(x_invest_intermittent, x_invest_thermal_cap) %>% select(name, reg, p, value, iTechnology)
 invest$iTechnology[invest$name == "x_invest_thermal_cap"] <- "Thermal"
 expansion <- invest %>% group_by(reg, iTechnology) %>% summarise(avg_exp = mean(value))
-#sys_exp <- 
-ggplot() + 
+sys_exp <- ggplot() + 
     geom_bar(data = expansion, aes(x = iTechnology, y = avg_exp, fill = iTechnology),stat = "identity") +
     facet_wrap(~reg) +   scale_fill_brewer(palette="Set2") +
     ylab("MW") + xlab("") +  ggtitle("System expansion - capacity" ) + 
     theme(plot.title = element_text(hjust = 0.5))
+plot(sys_exp)
+#ggsave("../results/figures/system_expansion.pdf",sys_exp,width=30,height=20,units="cm")
 
-#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/2_br_complete/system_expansion.pdf",sys_exp,width=30,height=20,units="cm")
 
 #### APPENDIX ####
 #### VarCost thermal power plants ####

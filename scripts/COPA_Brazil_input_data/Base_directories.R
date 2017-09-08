@@ -25,3 +25,6 @@ library(gdxrrw)
 # expt.dat -> expansão das térmicas
 # manutt.dat -> data e duração da manutenção de cada unidade geradora das usinas
 # sistema.dat Verificar se precisa ler
+
+# verificar o hydredit.
+

@@ -216,6 +216,13 @@ tt<-invest_opts_br %>% group_by(Technology,Variable) %>% summarize(s=sum(Value))
 
 invest_opts_br <- invest_opts_br %>% arrange(Region,P,Technology)
 
+# Transforming the values of variable costs in millions of R$/MWh. They are in R$/MWh
+invest_opts_br$Value[invest_opts_br$Variable == "VarCost"] <- invest_opts_br$Value[invest_opts_br$Variable == "VarCost"] / 1e6
+
+# Saving the invest_opts_br in a .csv file 
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
+#save_invest_opts_br <- write.table(invest_opts_br, file = "investOpts_br_thermal.sources.csv", sep = ";", row.names = FALSE )
+
 ##### For the time being, changing the names of regions from "BR" to "SE"
 invest_opts_br$Region[invest_opts_br$Region == "BR1"] <- "SE1"
 invest_opts_br$Region[invest_opts_br$Region == "BR2"] <- "SE2"
@@ -223,17 +230,11 @@ invest_opts_br$Region[invest_opts_br$Region == "BR3"] <- "SE3"
 invest_opts_br$Region[invest_opts_br$Region == "BR4"] <- "SE4"
 #Technology column = Thermal
 invest_opts_br$Technology <- "Thermal"
-# Increasing thermal costs in order to see renewables entering
-#invest_opts_br$Value[invest_opts_br$Variable == "Investment"] <- 2.5
-#invest_opts_br$Value[invest_opts_br$Variable == "VarCost"] <- 1000
 
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
-save_invest_opts_br <- write.table(invest_opts_br, file = "investOpts_br_thermal.sources_1.csv", sep = ";", row.names = FALSE )
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
+#save_invest_opts_br <- write.table(invest_opts_br, file = "investOpts_br_thermal.sources_1.csv", sep = ";", row.names = FALSE )
 #####
 
-# Saving the invest_opts_br in a .csv file 
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
-save_invest_opts_br <- write.table(invest_opts_br, file = "investOpts_br_thermal.sources.csv", sep = ";", row.names = FALSE )
 
 # Plotting
 thermal_var_costs<- as_tibble(filter(invest_opts_br, Variable == "VarCost")) 

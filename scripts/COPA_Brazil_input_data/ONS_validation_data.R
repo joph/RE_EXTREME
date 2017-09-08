@@ -3,8 +3,8 @@
 # Period: 7/1/2012 to 7/31/2012
 
 #### subsystem: SE ####
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 gen_se <- as_tibble(read.csv2("Comparativo_Geração_de_Energia_Jul_2012_SE.csv", header = T, sep = ","))
 
 # Cleaning data
@@ -68,8 +68,8 @@ ggplot() +
   theme(plot.title = element_text(hjust = 0.5))
 
 #### Subsystem: NE ####
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 gen_ne_ons <- as_tibble(read.csv2("Comparativo_Geração_de_Energia_Jul_2012_NE.csv", header = T, sep = ","))
 
 # Cleaning data
@@ -134,8 +134,8 @@ ggplot() +
   theme(plot.title = element_text(hjust = 0.5))
 
 #### Subsystem: S ####
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 gen_s_ons <- as_tibble(read.csv2("Comparativo_Geração_de_Energia_Jul_2012_S.csv", header = T, sep = ","))
 
 # Cleaning data
@@ -203,8 +203,8 @@ ggplot() +
   theme(plot.title = element_text(hjust = 0.5))
 
 #### Subsystem: N ####
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 gen_n_ons <- as_tibble(read.csv2("Comparativo_Geração_de_Energia_Jul_2012_N.csv", header = T, sep = ","))
 
 # Cleaning data

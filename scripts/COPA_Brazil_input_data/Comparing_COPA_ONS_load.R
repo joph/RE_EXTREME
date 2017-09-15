@@ -5,8 +5,8 @@ load_copa <- results %>% filter(name == "load")
 load_copa <- load_copa %>% select(reg, datetime, value)
 
 # ONS load
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 load_ons <- as_tibble(read.csv2("Comparativo_Carga_de_Energia_Dia_Hora_Jul_2012.csv", header = T, sep = ","))
 load_ons <- load_ons[1:2884,]
 load_ons <- load_ons[,c(1,2,5)]

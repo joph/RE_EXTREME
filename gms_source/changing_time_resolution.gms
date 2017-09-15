@@ -2,7 +2,7 @@ set t;
 set runs/R1/;
 set p/P001*P099/;
 set hp/HP001*HP005/;
-set reg/SE001*SE004/;
+set reg/SE001*SE005/;
 set ws/RS001*RS004/;
 set m/m1*m4/;
 set Technology/Thermal,Loss,Storage/;
@@ -251,7 +251,7 @@ storage_h_max(reg,t,ws,hp)$existsHydro(reg,ws,hp)
 min_flow(reg,t,ws,hp)$existsHydro(reg,ws,hp)
                     ..minFlow(reg,ws,hp)*mult1("M2")     =L= x_hydro(reg,t,ws,hp)     +
                                                  x_spill(reg,t,ws,hp)     +
-                                                 x_h_stor_out(reg,t,ws,hp) 
+                                                 x_h_stor_out(reg,t,ws,hp)
                                                  ;
 
 *maximum flow constraint

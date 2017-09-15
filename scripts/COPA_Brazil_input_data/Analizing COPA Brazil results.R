@@ -23,7 +23,9 @@ thermal_gen <- ggplot() +
   ggtitle("Thermal generation" ) + theme(plot.title = element_text(hjust = 0.5))
 plot(thermal_gen)
 #ggsave("../results/figures/thermal_gen.pdf",thermal_gen,width=30,height=20,units="cm")
-
+themal_regional_gen <- x_term %>% select(reg, p, value, datetime) %>% 
+  group_by(reg) %>% summarise(reg_sum = sum(value))
+  
 #### System expansion ####
 x_invest_intermittent <- results %>% filter(name == "x_invest_intermittent")
 x_invest_thermal_cap <- results %>% filter(name == "x_invest_thermal_cap")
@@ -38,12 +40,11 @@ sys_exp <- ggplot() +
 plot(sys_exp)
 #ggsave("../results/figures/system_expansion.pdf",sys_exp,width=30,height=20,units="cm")
 
-
 #### APPENDIX ####
 #### VarCost thermal power plants ####
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/investOptions")
-thermal_cost <- as_tibble(read.csv2("investOpts_br_thermal.sources.csv", sep = ";", header = T)) %>% 
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/investOptions")
+thermal_cost <- as_tibble(read.csv2("investOpts_br_thermal.sources_2012.csv", sep = ";", header = T)) %>% 
   filter(Variable == "VarCost")
 thermal_cost_i <- thermal_cost
 thermal_cost_i[sapply(thermal_cost_i, is.factor)] <- lapply(thermal_cost_i[sapply(thermal_cost_i, is.factor)], 

@@ -17,14 +17,14 @@ period<-c("2012-01-01 01:00:00 CET"
 ############Create model run
 prepareFullRun(period,
                out="../gms_execute/input_tr.gdx",
-               hydFile="../data/hydro/hydro_data_br_1.csv",
-               hydFeather="../data/hydro/br_shype_hydro.feather",
-               windFeather="../data/wind/wind_br.feather",
-               solarFeather="../data/solar/solar_GAMS_br.feather",
-               loadFeather="../data/load/load_Br_2014.feather",
-               transmissionCSV="../data/transmission/linesCapacities_br_1.csv",
-               investCSV="../data/investOptions/investOpts_br_thermal.sources_1.csv",
-               intermittentCSV="../data/investOptions/br_intermittent_opts_1.csv")
+               hydFile="../data/hydro/hydro_data_br_2012_1.csv",                           # validation 2012
+               hydFeather="../data/hydro/br_shype_hydro.feather",                          # validation 2012 - same file
+               windFeather="../data/wind/wind_br.feather",                                 # validation 2012 - same file
+               solarFeather="../data/solar/solar_GAMS_br.feather",                         # validation 2012 - same file 
+               loadFeather="../data/load/load_Br_2014.feather",                            # validation 2012 - same file
+               transmissionCSV="../data/transmission/linesCapacities_br_2012_1.csv",       # validation_2012
+               investCSV="../data/investOptions/investOpts_br_thermal.sources_1_2012.csv", # Validation_2012
+               intermittentCSV="../data/investOptions/br_intermittent_opts_2012_1.csv")    # validation 2012
 
 ############Run GAMS Manually
 
@@ -32,7 +32,7 @@ prepareFullRun(period,
 results<-readModelResults("input_tr.gdx",
                           "results_time_resolution.gdx",
                           period,
-                          "yearly_full_run")
+                          "Validation_2012")
 
 totalCost <- readResultsGeneric("results_time_resolution.gdx", 
                    c("totalCost")) %>% sapply(readSingleSymbolGDX,simplify=FALSE)

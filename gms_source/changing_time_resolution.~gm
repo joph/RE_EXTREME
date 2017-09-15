@@ -215,7 +215,7 @@ renewable(reg,t,p,iTechnology)$existsIntermittent(reg,p,iTechnology)
                     ..x_renew(reg,t,p,iTechnology)    +
                       x_curtail(reg,t,p,iTechnology)     =E= intermittent(reg,t,p,iTechnology) * x_invest_intermittent(reg,p,iTechnology);
 
-renewable_max Cap(reg,p,iTechnology)$existsIntermittent(reg,p,iTechnology)
+renewable_maxCap(reg,p,iTechnology)$existsIntermittent(reg,p,iTechnology)
                ..x_invest_intermittent(reg,p,iTechnology) =L= intermittentOptions(reg,p,iTechnology,"MaxCap");
 
 
@@ -251,8 +251,7 @@ storage_h_max(reg,t,ws,hp)$existsHydro(reg,ws,hp)
 min_flow(reg,t,ws,hp)$existsHydro(reg,ws,hp)
                     ..minFlow(reg,ws,hp)*mult1("M2")     =L= x_hydro(reg,t,ws,hp)     +
                                                  x_spill(reg,t,ws,hp)     +
-                                                 x_h_stor_out(reg,t,ws,hp) +
-                                                 x_slack(reg,t,ws,hp)
+                                                 x_h_stor_out(reg,t,ws,hp) 
                                                  ;
 
 *maximum flow constraint

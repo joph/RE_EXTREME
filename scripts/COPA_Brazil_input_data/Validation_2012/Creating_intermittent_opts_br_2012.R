@@ -3,8 +3,8 @@
 # Assumption: let's use the existing power plants in 2012 and consider zero InvestmentCost for these plants.
 
 #### Existent wind plants ####
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Wind")
-# setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Wind")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Wind")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Wind")
 wp <- as_tibble(read.csv2("wind_power_plants.csv"))
 
 # Reading file of existing wind power plants

@@ -61,7 +61,8 @@ shype_br <- read_feather("br_shype_hydro.feather")
 dates_shype <- as_tibble(year(shype_br$date))
   
 shype_br_2012 <- shype_br %>% mutate(year = dates_shype$value) %>% filter(year == 2012)
-
+ggplot(shype_br_2012, aes(x = date, y = mwh/1e3, col = region)) +
+  geom_line(size = 1) + facet_wrap(~region)
 #### hydro_data_br_2012 ####
 # Creating the structure of hydro_data_br
 

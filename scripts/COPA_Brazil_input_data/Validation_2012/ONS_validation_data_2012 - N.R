@@ -2,7 +2,7 @@
 # Daily values of electricity generation from ONS
 # Period: 7/1/2012 to 7/31/2012
 
-#### subsystem: SE ####
+#### subsystem: N ####
 setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
 #setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 gen_ons <- as_tibble(read.csv2("Comparativo_Geração_de_Energia_2012_N.csv", header = T, sep = ";"))
@@ -25,18 +25,21 @@ gen_ons$Date <- as.Date(gen_ons$Date, "%d/%m/%Y %H:%M:%S")
 # Getting ONs hydro data
 gen_hydro_ons <- filter(gen_ons, iTechnology == "hydro") %>% select(Date, production)
 
+# Getting ONs thermal data
+gen_thermal_ons <- filter(gen_ons, iTechnology == "thermal") %>% select(Date, production)
+
 # Concatenating hydro and thermal
 gen_ons_final <- bind_rows(gen_hydro_ons, gen_thermal_ons) %>% mutate(iTechnology = c(rep("hydro_ons",nrow(gen_hydro_ons)),rep("Thermal_ons",nrow(gen_thermal_ons))))
 
 #### COPA values - dayly basis ####
 # Passing to daily basis
-hydro_COPA <- results %>% filter(name == "x_hydro" & reg == "SE004")
+hydro_COPA <- results %>% filter(name == "x_hydro_tot" & reg == "N")
 hydro_COPA <- select(hydro_COPA,datetime, value)
-hydro_COPA <- hydro_COPA  %>% group_by(day(datetime), month(datetime)) %>% summarise(sum = sum(value))
+hydro_COPA <- hydro_COPA  %>% group_by(month(datetime), day(datetime)) %>% summarise(sum = sum(value))
 
-term_COPA <- results %>% filter(name == "x_term" & reg == "SE004")
+term_COPA <- results %>% filter(name == "x_term" & reg == "N")
 term_COPA <- select(term_COPA,datetime, value)
-term_COPA <- term_COPA  %>% group_by(day(datetime), month(datetime)) %>% summarise(sum = sum(value))
+term_COPA <- term_COPA  %>% group_by(month(datetime), day(datetime)) %>% summarise(sum = sum(value))
 
 # Concatenating COPA's hydro and thermal generation 
 gen_copa <- bind_rows(hydro_COPA, term_COPA)
@@ -46,22 +49,13 @@ gen_copa_final <- gen_copa %>% ungroup() %>% mutate(Date = gen_ons_final$Date) %
   select(Date, sum, iTechnology)
 colnames(gen_copa_final) <- colnames(gen_ons_final)
 
-#### Comparation between ONS and COPA #### SE ####
+#### Comparation between ONS and COPA 
 # Units -> everything in GWh
 # passing copa values to GWh
 gen_copa_final$production <- gen_copa_final$production / 1e3
 gen_n_12 <- bind_rows(gen_ons_final, gen_copa_final)
 
-# Plotting results
-comparing_generation_n <- ggplot() + 
-  geom_line(data = gen_n_12, aes(x = Date, y = production, col = iTechnology ), size = 1) +
-  scale_fill_brewer(palette="Set2") + facet_wrap(~iTechnology) +
-  ylab("GWh") + xlab("") +  ggtitle("Comparing generation - N" ) + 
-  theme(plot.title = element_text(hjust = 0.5))
-plot(comparing_generation_n)
-#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/SE",comparing_generation_se,width=30,height=20,units="cm")
-
-# preparing data for two more plots
+# preparing data for plots
 gen_n_12_area <- gen_n_12
 gen_n_12_area <- gen_n_12_area %>% mutate(type = c(rep("ons",nrow((gen_n_12))/2), rep("copa", nrow(gen_n_12)/2)))
 gen_n_12_area$iTechnology[gen_n_12_area$iTechnology == "hydro_ons"]  <- "hydro"
@@ -78,16 +72,7 @@ lines_together <- ggplot() +
   ylab("GWh") + xlab("") +  ggtitle("Comparing generation_tog - N" ) + 
   theme(plot.title = element_text(hjust = 0.5))
 plot(lines_together)
-#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/NE",lines_together,width=30,height=20,units="cm")
-
-# area graph
-comparing_generation_n_area <- ggplot(data = gen_n_12_area, aes(x = Date, y = production, fill = type)) + 
-  geom_area() +
-  scale_fill_brewer(palette="Set2") + facet_wrap(~iTechnology) + 
-  ylab("GWh") + xlab("") +  ggtitle("Comparing generation_area - N" ) + 
-  theme(plot.title = element_text(hjust = 0.5))
-plot(comparing_generation_n_area)
-#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures",comparing_generation_ne_area,width=30,height=20,units="cm")
+#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/N/lines_tog_n.pdf",lines_together,width=30,height=20,units="cm")
 
 # Plotting time-series in points to see the differences
 # hydro
@@ -95,37 +80,30 @@ points_hydro_ons  <- gen_n_12 %>% filter(iTechnology == "hydro_ons")
 points_hydro_copa <- gen_n_12 %>% filter(iTechnology == "hydro_copa")
 points_hydro_n_12 <- bind_rows(points_hydro_ons,points_hydro_copa)
 
-points_hydro_date_n <- ggplot(data = points_hydro_n_12, aes(x=Date,y=production)) + geom_point(aes(col=iTechnology)) +
-  ylab("ONS x COPA") + xlab("") +  ggtitle("Hydro - N" ) + 
-  theme(plot.title = element_text(hjust = 0.5))
-plot(points_hydro_date_n)
-#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures",points_hydro_date_se,width=30,height=20,units="cm")
-
 points_hydro <- tibble(
-  ons =   c(gen_n_12$production[gen_n_12$iTechnology == "hydro_ons"]), 
+  ons =   c(gen_n_12$production[gen_n_12$iTechnology == "hydro_ons"]),
   copa =  c(gen_n_12$production[gen_n_12$iTechnology == "hydro_copa"]))
 plot_points_hydro_n <- ggplot(data = points_hydro, aes(x = ons, y = copa)) + geom_point() +
   ylab("ONS") + xlab("COPA") + ggtitle("ONS x COPA - hydro - N") + theme(plot.title = element_text(hjust = 0.5))
 plot(plot_points_hydro_n)
-#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures",plot_points_hydro_se,width=30,height=20,units="cm")
+#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/N/points_hydro_n.pdf",plot_points_hydro_n,width=30,height=20,units="cm")
 
 # thermal
-points_thermal_ons  <- gen_n_12 %>% filter(iTechnology == "Thermal_ons")
-points_thermal_copa <- gen_n_12 %>% filter(iTechnology == "Thermal_copa")
-points_thermal_n_12 <- bind_rows(points_thermal_ons,points_thermal_copa)
-points_thermal_date_n <- ggplot(data = points_thermal_n_12, aes(x=Date,y=production)) + geom_point(aes(col=iTechnology)) +
-  ylab("ONS x COPA") + xlab("") +  ggtitle("Thermal - N" ) + 
-  theme(plot.title = element_text(hjust = 0.5))
-plot(points_thermal_date_n)
-#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures",points_thermal_date_se,width=30,height=20,units="cm")
-
 points_thermal <- tibble(
   ons =   c(gen_n_12$production[gen_n_12$iTechnology == "Thermal_ons"]), 
   copa =  c(gen_n_12$production[gen_n_12$iTechnology == "Thermal_copa"]))
 points_thermal_n <- ggplot(data = points_thermal, aes(x = ons, y = copa)) + geom_point() +
   ylab("ONS") + xlab("COPA") + ggtitle("ONS x COPA - thermal - N") + theme(plot.title = element_text(hjust = 0.5))
 plot(points_thermal_n)
-#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures",points_thermal_se,width=30,height=20,units="cm")
+#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/N/points_thermal_n.pdf",points_thermal_n,width=30,height=20,units="cm")
+
+#### Multiplot with the more important plots ####
+source("C:/Users/cancella/Google Drive/!IIASA/COPA/RE_EXTREME/scripts/COPA_Brazil_input_data/multiplot.R")
+#source("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/RE_EXTREME/scripts/COPA_Brazil_input_data/multiplot.R")
+n_summary_plots <- multiplot(lines_together, plot_points_hydro_n,points_thermal_n)
+#ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/N/summary_n.pdf",n_summary_plots,width=30,height=20,units="cm")
+
+#### statistical indicators ####
 
 # Correlation between time-series of ONS x COPA
 correlation_hydro_12 <- as_tibble(cor(gen_n_12$production[gen_n_12$iTechnology == "hydro_ons"],
@@ -137,7 +115,7 @@ reg <- lm(copa ~ ons , data = points_hydro)
 rmse_hydro <- modelr::rmse(reg, points_hydro)
 
 reg_thermal <- lm(copa ~ ons , data = points_thermal)
-rmse_thermal <- modelr::rmse(reg, points_thermal)
+rmse_thermal <- modelr::rmse(reg_thermal, points_thermal)
 
 stats_summary_n <- tibble(
   statistic = c("hydro", "thermal"),
@@ -145,7 +123,6 @@ stats_summary_n <- tibble(
   RMSE = c(rmse_hydro, rmse_thermal)
 )
 stats_summary_n
+#### Saving correlation and RMSE in feather format ####
 #setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-#write_feather(stats_summary_n,"stats_summary_n.feather")
-#rmse_hydro <- modelr::rmse(gen_se_12$production[gen_se_12$iTechnology == "hydro_copa"],
-#               gen_se_12$production[gen_se_12$iTechnology == "hydro_ons"])
+#write_feather(stats_summary_n,"stats_summary_n_solo.feather")

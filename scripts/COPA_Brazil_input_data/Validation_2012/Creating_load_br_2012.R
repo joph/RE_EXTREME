@@ -2,15 +2,15 @@
 # It also manipulate this data to put it in COPA format reading. 
 
 # Reading loads: Swedish and Brazilian
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/load")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/load")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/load")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/load")
 load_se <- as_tibble(read.csv2("load_2007_2015 - original.csv", header = T, sep = ";"))
 
 # Attention to the format of the content of the files! If the numbers are like general, they come to R like factors 
 # and the world is beautiful. Otherwise, if it is like the numbers are like numbers, they come like character 
 # and we have issues.
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Carga")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Carga")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Carga")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Carga")
 load <- as_tibble(read.csv2("Carga Horária_MWhh_01-01-2015 a 01-01-2017 -csv.csv", header = T)) %>% 
   filter(DATA != "MÉDIA") %>% select(-DATA)
 

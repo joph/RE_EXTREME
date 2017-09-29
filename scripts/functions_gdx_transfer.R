@@ -137,7 +137,9 @@ prepareHydroParameters<-function(hydroData,hydroTimeSeries){
               "maxHydPower",
               "maxReservoir",
               "runOffDelay",
-              "hydroConvFact")
+              "hydroConvFact",
+              "initReservoir",
+              "termReservoir")
   uels<-2:4
   valColumns<-names
   

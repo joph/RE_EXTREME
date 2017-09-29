@@ -2,7 +2,8 @@ set t;
 set runs/R1/;
 set p/P001*P099/;
 set hp/HP001*HP005/;
-set reg/SE001*SE004/;
+*set reg/SE,S,NE,N,NF/;
+set reg/SE001*SE005/;
 set ws/RS001*RS004/;
 set m/m1*m4/;
 set Technology/Thermal,Loss,Storage/;
@@ -46,11 +47,13 @@ parameter investOptions(reg,p,technology,cParam);
 parameter intermittentOptions(reg,p,iTechnology,cParam);
 parameter transmissionCap(reg,reg1);
 parameter spillRes(runs);
+parameter initReservoir(reg,ws,hp);
+parameter termReservoir(reg,ws,hp);
 
 $GDXIN "input_tr.gdx"
 $LOAD t,hydro,intermittent,minFlow,maxFlow,maxReservoir,upRiver
 $LOAD hydroConvFact,runOffDelay,load,investOptions,length,transmissionCap
-$load maxHydPower,intermittentOptions
+$load maxHydPower,intermittentOptions, initReservoir, termReservoir
 $GDXIN
 
 parameter results(runs,reg,resCat);
@@ -133,15 +136,15 @@ x_stor_lev(reg,t,p),
 
 ***investments
 x_invest_thermal_cap(reg,p),
-x_invest_storage(reg,p),
+x_invest_storage(reg,p)
 
-
-***transmission
-x_transfer(reg,reg1,t)
 ;
+
 
 variables
 x_slack(reg,t,ws,hp)
+***transmission
+x_transfer(reg,reg1,t)
 ;
 
 
@@ -166,6 +169,10 @@ storage_h_lev,
 
 storage_h_max,
 
+h_init,
+
+h_term,
+
 min_flow,
 
 max_flow,
@@ -180,7 +187,9 @@ res_therm,
 
 therm_max,
 
-transmission_cap
+transmission_cap,
+
+trans_eq
 ;
 
 
@@ -193,14 +202,13 @@ objective             ..totalCost            =E= SUM((reg,t,p)$investOptions(reg
                                                  ;
 
 *balances supply and demand in the region
-bal(reg,t)$hasLoad(reg,t)
+bal(reg,t)$(hasLoad(reg,t) or (ord(reg)=5))
                       ..load(reg,t)          =E= SUM(p$investOptions(reg,p,"Thermal","VarCost"),x_term(reg,t,p))                        +
                                                  SUM((ws,hp)$existsHydro(reg,ws,hp),0.99*x_h_stor_out(reg,t,ws,hp))                     +
                                                  SUM((p)$investOptions(reg,p,"Storage","Investment"),0.9*x_stor_out(reg,t,p))           +
                                                  SUM((p,iTechnology)$existsIntermittent(reg,p,iTechnology),x_renew(reg,t,p,iTechnology))+
                                                  SUM((ws,hp)$existsHydro(reg,ws,hp),x_hydro(reg,t,ws,hp))                               -
                                                  SUM(p$investOptions(reg,p,"Storage","Investment"),x_stor_in(reg,t,p))                  +
-                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer(reg1,reg,t))                             -
                                                  SUM(reg1$transmissionCap(reg,reg1),x_transfer(reg,reg1,t));
 
 *+
@@ -222,12 +230,14 @@ renewable_maxCap(reg,p,iTechnology)$existsIntermittent(reg,p,iTechnology)
 *********hydropower production*********
 
 *balance hydropower production at each plant, depending on upper reservoir production
-hydro_bal(reg,t,ws,hp)$existsHydro(reg,ws,hp)
+hydro_bal(reg,t,ws,hp)$(existsHydro(reg,ws,hp))
                      ..hydro(reg,t,ws,hp)    =E= x_hydro(reg,t,ws,hp)     +
                                                  x_spill(reg,t,ws,hp)     +
                                                  x_h_stor_in(reg,t,ws,hp) -
                                                  x_hyd_up(reg,t,ws,hp)
                                                  ;
+
+
 
 *calculate up-river production
 hydro_up(reg,t,ws,hp)$existsHydro(reg,ws,hp)
@@ -238,11 +248,23 @@ hydro_up(reg,t,ws,hp)$existsHydro(reg,ws,hp)
                                                  );
 
 *level of storage in hydropower plants
-storage_h_lev(reg,t,ws,hp)$existsHydro(reg,ws,hp)
+storage_h_lev(reg,t,ws,hp)$(existsHydro(reg,ws,hp)  and
+                        (ord(t)>1) and (ord(t)<card(t)))
                    ..x_h_stor_lv(reg,t,ws,hp)=E= x_h_stor_lv(reg,t-1,ws,hp) +
                                                  x_h_stor_in(reg,t,ws,hp)   -
                                                  x_h_stor_out(reg,t,ws,hp)
                                                  ;
+*Initial storage level
+h_init(reg,t,ws,hp)$(existsHydro(reg,ws,hp) and
+                     (ord(t)=1))
+                     ..x_h_stor_lv(reg,t,ws,hp)=E= maxReservoir(reg,ws,hp)*initReservoir(reg,ws,hp);
+
+*Final storage level
+h_term(reg,t,ws,hp)$(existsHydro(reg,ws,hp) and
+                     (ord(t)=card(t)))
+                     ..x_h_stor_lv(reg,t,ws,hp)=E= maxReservoir(reg,ws,hp)*termReservoir(reg,ws,hp);
+
+
 *maximum level of storage
 storage_h_max(reg,t,ws,hp)$existsHydro(reg,ws,hp)
                    ..x_h_stor_lv(reg,t,ws,hp)=L= maxReservoir(reg,ws,hp)*mult1("M1");
@@ -251,7 +273,7 @@ storage_h_max(reg,t,ws,hp)$existsHydro(reg,ws,hp)
 min_flow(reg,t,ws,hp)$existsHydro(reg,ws,hp)
                     ..minFlow(reg,ws,hp)*mult1("M2")     =L= x_hydro(reg,t,ws,hp)     +
                                                  x_spill(reg,t,ws,hp)     +
-                                                 x_h_stor_out(reg,t,ws,hp) 
+                                                 x_h_stor_out(reg,t,ws,hp)
                                                  ;
 
 *maximum flow constraint
@@ -262,7 +284,7 @@ max_flow(reg,ws,hp,t)$existsHydro(reg,ws,hp)
 
 *maximum hydropower production, as limited by turbines
 max_hp_power(reg,ws,hp,t)$existsHydro(reg,ws,hp)
-                    ..maxHydPower(reg,ws,hp)*mult1("M4") =G= x_hydro(reg,t,ws,hp)+
+                    ..maxHydPower(reg,ws,hp)*mult1("M4")*(0.72) =G= x_hydro(reg,t,ws,hp)+
                                                  x_h_stor_out(reg,t,ws,hp);
 
 *********battery storage*********
@@ -294,8 +316,12 @@ therm_max(reg,p)$investOptions(reg,p,"Thermal","maxCap")
 transmission_cap(reg,reg1,t)$transmissionCap(reg,reg1)
                 ..x_transfer(reg,reg1,t) =L= transmissionCap(reg,reg1)*mult1("M3");
 
+trans_eq(reg,reg1,t)$transmissionCap(reg,reg1)
+                ..x_transfer(reg,reg1,t)=E=x_transfer(reg1,reg,t)*(-1);
 
-option limrow =100;
+
+
+*model mint /all/;
 
 model mint/
           objective
@@ -309,17 +335,21 @@ model mint/
           ,min_flow
           ,max_flow
           ,max_hp_power
+          ,h_init
+          ,h_term
           ,storage_lev
           ,storage_max
           ,res_therm
           ,therm_max
           ,transmission_cap
+          ,trans_eq
 
 /;
 
 scalar starttime;
 scalar elapsed;
 OPTION RESLIM = 50000000;
+option limrow=100;
 
 
 
@@ -367,14 +397,13 @@ transfer_net(reg,t)=transfer_in(reg,t)-transfer_out(reg,t);
 p_renew(reg,t,p,iTechnology)$existsIntermittent(reg,p,iTechnology)=x_renew.l(reg,t,p,iTechnology)$existsIntermittent(reg,p,iTechnology);
 
 parameter bal_(reg,t);
-bal_(reg,t)=  load(reg,t)         -(SUM(p$investOptions(reg,p,"Thermal","VarCost"),x_term.l(reg,t,p))                        +
+bal_(reg,t)=  load(reg,t)         - SUM(p$investOptions(reg,p,"Thermal","VarCost"),x_term.l(reg,t,p))                        +
                                                  SUM((ws,hp)$existsHydro(reg,ws,hp),0.99*x_h_stor_out.l(reg,t,ws,hp))                     +
                                                  SUM((p)$investOptions(reg,p,"Storage","Investment"),0.9*x_stor_out.l(reg,t,p))           +
                                                  SUM((p,iTechnology)$existsIntermittent(reg,p,iTechnology),x_renew.l(reg,t,p,iTechnology))+
                                                  SUM((ws,hp)$existsHydro(reg,ws,hp),x_hydro.l(reg,t,ws,hp))                               -
                                                  SUM(p$investOptions(reg,p,"Storage","Investment"),x_stor_in.l(reg,t,p))                  +
-                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer.l(reg1,reg,t))                             -
-                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer.l(reg,reg1,t)));
+                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer.l(reg,reg1,t));
 
 display  results,
          transfer_in,

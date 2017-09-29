@@ -8,8 +8,12 @@ setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Costs/Tables")
  
 #Bibliotecas
 library(tidyverse)
+library(dplyr)
+library(tibble)
 library(feather)
 library(xlsx)
+library(ggplot2)
+library(gridExtra)
 library(RColorBrewer)
 library(reshape2)
 library(gdxrrw)
@@ -24,7 +28,3 @@ library(gdxrrw)
 
 # verificar o hydredit.
 
-#By the time we load "tidyverse" package, we load these packages as well. 
-library(dplyr)
-library(tibble)
-#library(ggplot2)

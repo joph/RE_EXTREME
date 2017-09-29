@@ -8,13 +8,14 @@ setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/load")
 #setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/load")
 load_se <- as_tibble(read.csv2("load_2007_2015 - original.csv", header = T, sep = ";"))
 
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Carga")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Carga")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Carga")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Carga")
 # Attention to the format of the content of the files! If the numbers are like general, they come to R like factors 
 # and the world is beautiful. Otherwise, if it is like the numbers are like numbers, they come like character 
 # and we have issues. 
 load <- as_tibble(read.csv2("Carga Horária_01-01-2012 a 01-01-2014.csv", header = T)) %>% 
   filter(Instante != "Média") %>% select(-Instante, -SIN)
+
 
 #dates<-c("2015-01-01 03:00:00"
  #        ,"2017-01-02 00:00:00")
@@ -23,18 +24,26 @@ load <- as_tibble(read.csv2("Carga Horária_01-01-2012 a 01-01-2014.csv", header 
 #dates<-c("2014-01-01 05:00:00"
  #       ,"2016-01-03 02:00:00")
 
-dates<-c("2012-01-01 01:00:00"
+dates<-c("2012-01-01 03:00:00"
          ,"2014-01-02 00:00:00")
 
 s1<-seq(as.POSIXct(dates[1],tz = "UTC"),
         as.POSIXct(dates[2],tz = "UTC"),
         by="h")
+load<-load %>% mutate(NE=as.numeric(as.character(NE)),
+                      SE.CO=as.numeric(as.character(SE.CO)),
+                      SUL=as.numeric(as.character(SUL)),
+                      N=as.numeric(as.character(N)))
+load<-na.omit(load) 
 load$Date<-s1
 
 load<-load %>% gather(Region,Load,-Date)
 
+
+
 #spread(load,Region,Load)
-load_final<-load %>% mutate(Load=as.numeric(as.character(Load)))
+load_final<-load
+
 
 regions_final <- (c(rep("SE3",(nrow(load_final)) / 4),
                             rep("SE4",(nrow(load_final)) / 4),
@@ -46,17 +55,17 @@ load_final<-load_final %>% mutate(Region=regions_final)
 # Veriying NAs because of summer time
 sum(is.na(load_final$Load))
 
-localizing_NA <- load_final[which(is.na(load_final$Load)),] # We have 4 NAs in 2012 and 4 in 2013.
+#localizing_NA <- load_final[which(is.na(load_final$Load)),] # We have 4 NAs in 2012 and 4 in 2013.
 
 # Replacing NAs
-load_final$Load[load_final$Date == "2012-10-21 03:00:00 UTC"] <- 
-  c(load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE3"],
-    load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE4"],
-    load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE1"],
-    load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE2"])
+#load_final$Load[load_final$Date == "2012-10-21 03:00:00 UTC"] <- 
+#  c(load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE3"],
+#    load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE4"],
+#    load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE1"],
+#    load_final$Load[load_final$Date == "2012-10-21 02:00:00 UTC" & load_final$Region == "SE2"])
 
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/Data/load")
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/Data/load")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/Data/load")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/Data/load")
 write_feather(load_final,"load_Br_2014.feather")
 write.table(load_final, file = "load_Br_2014.csv", sep =";", row.names = F)
 

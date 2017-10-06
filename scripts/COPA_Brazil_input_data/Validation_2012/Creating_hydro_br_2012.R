@@ -83,7 +83,7 @@ hydro_data_br_2012 <- se_hydro
 hydro_data_br_2012$Region <- c("BR1", "BR2", "BR3", "BR4", "BR1")
 
 # maxReservoir
-# I've got this data from Julian. He got it from the IPDO dec-2012. This page is not available anymore. 
+# I've got this data from Julian. He`s` got it from the IPDO dec-2012. This page is not available anymore. 
 # It is very similar from may-2017 from ons. 
   # http://www.ons.org.br/tabela_reservatorios/conteudo.asp Acessed: July, 24th, 2017.
 

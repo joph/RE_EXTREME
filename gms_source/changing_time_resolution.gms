@@ -197,6 +197,7 @@ objective             ..totalCost            =E= SUM((reg,t,p)$investOptions(reg
                                                  SUM((reg,p  )$investOptions(reg,p,"Thermal","Investment")      ,investOptions(reg,p,"Thermal","Investment")*x_invest_thermal_cap(reg,p))                      +
                                                  SUM((reg,p  )$investOptions(reg,p,"Storage","Investment")      ,investOptions(reg,p,"Storage","Investment")*x_invest_storage(reg,p))                          +
                                                  SUM((reg,p,iTechnology )$existsIntermittent(reg,p,iTechnology) ,intermittentOptions(reg,p,iTechnology,"Investment")*x_invest_intermittent(reg,p,iTechnology))
+*                                                 SUM((reg,reg1,t)                                               ,x_transfer(reg,reg1,t))*4.5
 *+
 *                                                 SUM((reg,t,ws,hp),-1*x_slack(reg,t,ws,hp)*700000)
                                                  ;
@@ -284,7 +285,7 @@ max_flow(reg,ws,hp,t)$existsHydro(reg,ws,hp)
 
 *maximum hydropower production, as limited by turbines
 max_hp_power(reg,ws,hp,t)$existsHydro(reg,ws,hp)
-                    ..maxHydPower(reg,ws,hp)*mult1("M4")*(0.71) =G= x_hydro(reg,t,ws,hp)+
+                    ..maxHydPower(reg,ws,hp)*mult1("M4") =G= x_hydro(reg,t,ws,hp)+
                                                  x_h_stor_out(reg,t,ws,hp);
 
 *********battery storage*********

@@ -22,7 +22,7 @@ prepareFullRun(period,
                windFeather="../data/wind/wind_br.feather",                                 # validation 2012 - same file
                solarFeather="../data/solar/solar_GAMS_br.feather",                         # validation 2012 - same file 
                loadFeather="../data/load/load_Br_2014.feather",                            # validation 2012 - same file
-               transmissionCSV="../data/transmission/linesCapacities_br_2012_1.csv",       # validation_2012
+               transmissionCSV="../data/transmission/linesCapacities_br_2012_1.csv",       # validation_2012  # linesCapacities_br_2012_1 - transmission_lines_50.csv # 50 % of 2012 capacity for each region
                investCSV="../data/investOptions/investOpts_br_thermal.sources_1_2012.csv", # Validation_2012
                intermittentCSV="../data/investOptions/br_intermittent_opts_2012_1.csv")    # validation 2012
 
@@ -37,7 +37,7 @@ results<-readModelResults("input_tr.gdx",
 #results %>% group_by(name) %>% summarize(s=sum(value))
 
 #results %>% filter(name=="x_transfer") %>% group_by(datetime) %>% summarize(s=sum(value)) %>% 
-#  ggplot(aes(x=datetime,y=s)) + geom_line()
+ #ggplot(aes(x=datetime,y=s)) + geom_line()
 
 # changing the regions names
 namesOrig<-c("SE001","SE002","SE003","SE004","SE005")
@@ -155,13 +155,13 @@ results<-bind_rows(results,x_hydro_tot)
 
 ###############transfer###############
 #transfer<-readModelResultsTransfer("results_time_resolution.gdx",period)$x_transfer %>% 
-  #mutate(t=ymdhm(t))
+ # mutate(t=ymdhm(t))
 
-#transfer_weekly<- transfer %>% group_by(week(datetime),reg,reg1) %>% summarize(value=max(value),
-  #                                                                    datetime=min(datetime)
- #                                                                    )
+#transfer_weekly<- x_transfer %>% group_by(week(datetime),reg,reg1) %>% summarize(value=max(value),
+#                                                                    datetime=min(datetime)
+ #                                                                   )
 
-#fig03<-transfer_weekly %>% ggplot(aes(x=datetime,y=value)) +geom_line(aes(col=reg1))  + facet_wrap(~reg)
+#fig03<-transfer_weekly %>% ggplot(aes(x=datetime,y=value)) +geom_line(aes(col=reg1), size =1)  + facet_wrap(~reg)
 #plot(fig03)
 #ggsave("results/figures/opt_transfer.pdf",fig03,width=30,height=20,units="cm")
 

@@ -1,6 +1,6 @@
 # Analizing the results of COPA Brazil runs
 # We have to load the results from "load_data_write_gdx.R".
-
+setwd(base_dir)
 #### Renewable generation ####
 renew <- results %>% filter(name == "x_renew")
 sum(renew$value)
@@ -12,7 +12,7 @@ renew_gen_fig <- ggplot() +
   facet_wrap(~reg) +  ylab("MWh ") + xlab("") + 
   ggtitle("Renewable generation" ) + theme(plot.title = element_text(hjust = 0.5))
 plot(renew_gen_fig)
-#ggsave("../results/figures/renewable_generation.pdf",renew_gen_fig,width=30,height=20,units="cm")
+ggsave("../results/figures/renewable_generation.pdf",renew_gen_fig,width=30,height=20,units="cm")
 
 #### Thermal generation ####
 x_term <- results %>% filter(name == "x_term")
@@ -22,7 +22,7 @@ thermal_gen <- ggplot() +
   facet_wrap(~reg) +   ylab("MWh ") + xlab("") + 
   ggtitle("Thermal generation" ) + theme(plot.title = element_text(hjust = 0.5))
 plot(thermal_gen)
-#ggsave("../results/figures/thermal_gen.pdf",thermal_gen,width=30,height=20,units="cm")
+ggsave("../results/figures/thermal_gen.pdf",thermal_gen,width=30,height=20,units="cm")
 themal_regional_gen <- x_term %>% select(reg, p, value, datetime) %>% 
   group_by(reg) %>% summarise(reg_sum = sum(value))
   
@@ -38,7 +38,18 @@ sys_exp <- ggplot() +
     ylab("MW") + xlab("") +  ggtitle("System expansion - capacity" ) + 
     theme(plot.title = element_text(hjust = 0.5))
 plot(sys_exp)
-#ggsave("../results/figures/system_expansion.pdf",sys_exp,width=30,height=20,units="cm")
+ggsave("../results/figures/system_expansion.pdf",sys_exp,width=30,height=20,units="cm")
+
+#### Energy transfer ####
+x_transfer <- results %>% filter(name == "x_transfer")
+transfer_weekly<- x_transfer %>% group_by(week(datetime),reg,reg1) %>% summarize(value=max(value),
+                                                                                 datetime=min(datetime)
+)
+
+transfer_fig <-transfer_weekly %>% ggplot(aes(x=datetime,y=value)) +geom_line(aes(col=reg1), size =1)  + facet_wrap(~reg)
+plot(transfer_fig)
+ggsave("../results/figures/opt_transfer.pdf",transfer_fig,width=30,height=20,units="cm")
+
 
 #### APPENDIX ####
 #### VarCost thermal power plants ####

@@ -66,6 +66,7 @@ if(namesNew == "SE/CO"){
 } else {}
 
 path <- "C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation"
+#path <- "C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation"
 path_f <- paste(path, "/geracao_ONS_", namesNew, ".csv",sep="")
 save_gen_ons <- write_csv(gen_ons_final, path_f)
 #genONSTest <- read_csv("geracao_ONS_SE.CO.csv") # reading it

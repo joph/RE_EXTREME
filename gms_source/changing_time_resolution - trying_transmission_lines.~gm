@@ -138,13 +138,17 @@ x_stor_lev(reg,t,p),
 x_invest_thermal_cap(reg,p),
 x_invest_storage(reg,p)
 
+***transmission
+x_transfer_in(reg,reg1,t),
+x_transfer_out(reg, reg1,t)
+
 ;
 
 
 variables
 x_slack(reg,t,ws,hp)
 ***transmission
-x_transfer(reg,reg1,t)
+*x_transfer(reg,reg1,t)
 ;
 
 
@@ -187,16 +191,21 @@ res_therm,
 
 therm_max,
 
-transmission_cap,
+transmission_cap_out,
 
-trans_eq
+transmission_cap_in,
+
+trans_eq1,trans_eq2,trans_eq3,trans_eq4,trans_eq5,trans_eq6,trans_eq7,trans_eq8,
+trans_eq9,trans_eq10
+
 ;
 
 
 objective             ..totalCost            =E= SUM((reg,t,p)$investOptions(reg,p,"Thermal","VarCost")         ,investOptions(reg,p,"Thermal","VarCost")*x_term(reg,t,p)*length(t))                           +
                                                  SUM((reg,p  )$investOptions(reg,p,"Thermal","Investment")      ,investOptions(reg,p,"Thermal","Investment")*x_invest_thermal_cap(reg,p))                      +
                                                  SUM((reg,p  )$investOptions(reg,p,"Storage","Investment")      ,investOptions(reg,p,"Storage","Investment")*x_invest_storage(reg,p))                          +
-                                                 SUM((reg,p,iTechnology )$existsIntermittent(reg,p,iTechnology) ,intermittentOptions(reg,p,iTechnology,"Investment")*x_invest_intermittent(reg,p,iTechnology))
+                                                 SUM((reg,p,iTechnology )$existsIntermittent(reg,p,iTechnology) ,intermittentOptions(reg,p,iTechnology,"Investment")*x_invest_intermittent(reg,p,iTechnology)) +
+                                                 SUM((reg, reg1,t)                                              ,0.0020*x_transfer_out(reg, reg1,t))
 *                                                 SUM((reg,reg1,t)                                               ,x_transfer(reg,reg1,t))*4.5
 *+
 *                                                 SUM((reg,t,ws,hp),-1*x_slack(reg,t,ws,hp)*700000)
@@ -210,7 +219,9 @@ bal(reg,t)$(hasLoad(reg,t) or (ord(reg)=5))
                                                  SUM((p,iTechnology)$existsIntermittent(reg,p,iTechnology),x_renew(reg,t,p,iTechnology))+
                                                  SUM((ws,hp)$existsHydro(reg,ws,hp),x_hydro(reg,t,ws,hp))                               -
                                                  SUM(p$investOptions(reg,p,"Storage","Investment"),x_stor_in(reg,t,p))                  +
-                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer(reg,reg1,t));
+                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer_in(reg,reg1,t))                          -
+                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer_out(reg,reg1,t));
+*                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer(reg,reg1,t));
 
 *+
 *                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer_in(reg,reg1,t))                       -
@@ -285,7 +296,7 @@ max_flow(reg,ws,hp,t)$existsHydro(reg,ws,hp)
 
 *maximum hydropower production, as limited by turbines
 max_hp_power(reg,ws,hp,t)$existsHydro(reg,ws,hp)
-                    ..maxHydPower(reg,ws,hp)*mult1("M4")*0.50 =G= x_hydro(reg,t,ws,hp)+
+                    ..maxHydPower(reg,ws,hp)*mult1("M4") =G= x_hydro(reg,t,ws,hp)+
                                                  x_h_stor_out(reg,t,ws,hp);
 
 *********battery storage*********
@@ -314,11 +325,28 @@ therm_max(reg,p)$investOptions(reg,p,"Thermal","maxCap")
 
 *********transmission*********
 
-transmission_cap(reg,reg1,t)$transmissionCap(reg,reg1)
-                ..x_transfer(reg,reg1,t) =L= transmissionCap(reg,reg1)*mult1("M3");
+*transmission_cap(reg,reg1,t)$transmissionCap(reg,reg1)
+*               ..x_transfer(reg,reg1,t) =L= transmissionCap(reg,reg1)*mult1("M3");
 
-trans_eq(reg,reg1,t)$transmissionCap(reg,reg1)
-                ..x_transfer(reg,reg1,t)=E=x_transfer(reg1,reg,t)*(-1);
+*trans_eq(reg,reg1,t)$transmissionCap(reg,reg1)
+*               ..x_transfer(reg,reg1,t)=E=x_transfer(reg1,reg,t)*(-1);
+
+transmission_cap_out(reg,reg1,t)$transmissionCap(reg,reg1)
+                ..x_transfer_out(reg,reg1,t) =L= transmissionCap(reg,reg1)*mult1("M3");
+
+transmission_cap_in(reg,reg1,t)$transmissionCap(reg,reg1)
+                ..x_transfer_in(reg,reg1,t) =L= transmissionCap(reg,reg1)*mult1("M3");
+
+trans_eq1(reg,reg1,t)..x_transfer_out("SE001","SE002",t)  =E= x_transfer_in("SE002","SE001",t);
+trans_eq2(reg,reg1,t)..x_transfer_out("SE001","SE003",t)  =E= x_transfer_in("SE003","SE001",t);
+trans_eq3(reg,reg1,t)..x_transfer_out("SE001","SE005",t)  =E= x_transfer_in("SE005","SE001",t);
+trans_eq4(reg,reg1,t)..x_transfer_out("SE002","SE001",t)  =E= x_transfer_in("SE001","SE002",t);
+trans_eq5(reg,reg1,t)..x_transfer_out("SE003","SE005",t)  =E= x_transfer_in("SE005","SE003",t);
+trans_eq6(reg,reg1,t)..x_transfer_out("SE004","SE005",t)  =E= x_transfer_in("SE005","SE004",t);
+trans_eq7(reg,reg1,t)..x_transfer_out("SE003","SE001",t)  =E= x_transfer_in("SE001","SE003",t);
+trans_eq8(reg,reg1,t)..x_transfer_out("SE005","SE001",t)  =E= x_transfer_in("SE001","SE005",t);
+trans_eq9(reg,reg1,t)..x_transfer_out("SE005","SE004",t)  =E= x_transfer_in("SE004","SE005",t);
+trans_eq10(reg,reg1,t)..x_transfer_out("SE005","SE003",t) =E= x_transfer_in("SE003","SE005",t);
 
 
 
@@ -342,8 +370,9 @@ model mint/
           ,storage_max
           ,res_therm
           ,therm_max
-          ,transmission_cap
-          ,trans_eq
+          ,transmission_cap_out
+          ,trans_eq1,trans_eq2,trans_eq3,trans_eq4,trans_eq5,trans_eq6,trans_eq7,trans_eq8,
+trans_eq9,trans_eq10
 
 /;
 
@@ -392,8 +421,8 @@ loop(runs,
 );
 
 parameter transfer_in(reg,t),transfer_out(reg,t),transfer_net(reg,t),p_renew(reg,t,p,iTechnology);
-transfer_in(reg,t)=SUM((reg1)$transmissionCap(reg,reg1),x_transfer.l(reg1,reg,t));
-transfer_out(reg,t)=SUM((reg1)$transmissionCap(reg,reg1),x_transfer.l(reg,reg1,t));
+transfer_in(reg,t)=SUM((reg1)$transmissionCap(reg,reg1),x_transfer_in.l(reg,reg1,t));
+transfer_out(reg,t)=SUM((reg1)$transmissionCap(reg,reg1),x_transfer_out.l(reg,reg1,t));
 transfer_net(reg,t)=transfer_in(reg,t)-transfer_out(reg,t);
 p_renew(reg,t,p,iTechnology)$existsIntermittent(reg,p,iTechnology)=x_renew.l(reg,t,p,iTechnology)$existsIntermittent(reg,p,iTechnology);
 
@@ -404,7 +433,9 @@ bal_(reg,t)=  load(reg,t)         - SUM(p$investOptions(reg,p,"Thermal","VarCost
                                                  SUM((p,iTechnology)$existsIntermittent(reg,p,iTechnology),x_renew.l(reg,t,p,iTechnology))+
                                                  SUM((ws,hp)$existsHydro(reg,ws,hp),x_hydro.l(reg,t,ws,hp))                               -
                                                  SUM(p$investOptions(reg,p,"Storage","Investment"),x_stor_in.l(reg,t,p))                  +
-                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer.l(reg,reg1,t));
+                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer_in.l(reg,reg1,t))                          -
+                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer_out.l(reg,reg1,t));
+*                                                 SUM(reg1$transmissionCap(reg,reg1),x_transfer.l(reg,reg1,t));
 
 display  results,
          transfer_in,

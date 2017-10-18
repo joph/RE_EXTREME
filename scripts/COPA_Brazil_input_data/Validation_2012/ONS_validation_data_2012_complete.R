@@ -1,17 +1,17 @@
 # This script compares results of generation of electricity by source and region of ONS and COPA Brazil.
 # Daily values of electricity generation from ONS
-# Period: 7/1/2012 to 7/31/2012
+# Period: 1/1/2012 to 12/31/2012
 
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 
 # Defining regions names
 # it is different from the same variable in "load_data_write_gdx.R", because we  don't need the virtual node here
 namesNew<-c("SE/CO","SUL","NE","N") 
 
 for (i in c(1:4)){
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
   
 #  i=1
 #### reading ONS data generated on "Cleaning_ONS_validation_data.R" ####
@@ -63,8 +63,8 @@ gen_ons_copa_tog$iTechnology[gen_ons_copa_tog$iTechnology == "wind_ons"]     <- 
 gen_ons_copa_tog$iTechnology[gen_ons_copa_tog$iTechnology == "wind_copa"]    <- "wind"
 
 # defining paths for figures 
-path_fig <- "C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures"
-#path_fig <- "C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/figures"
+#path_fig <- "C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures"
+path_fig <- "C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/figures"
 if(namesNew[i] == "SE/CO"){
   namesNew[i] <- "SE.CO"
   print(namesNew[i])
@@ -139,8 +139,8 @@ if(gen_ons_final$iTechnology == "wind_ons"){
 
 #### Statistical indicators ####
 # Correlation between time-series of ONS x COPA
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 correlation_hydro <- as_tibble(cor(gen_ons_copa$production[gen_ons_copa$iTechnology == "hydro_ons"],
                                    gen_ons_copa$production[gen_ons_copa$iTechnology == "hydro_copa"]))
 correlation_thermal <- as_tibble(cor(gen_ons_copa$production[gen_ons_copa$iTechnology == "Thermal_ons"],

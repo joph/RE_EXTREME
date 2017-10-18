@@ -1,5 +1,6 @@
-# This script clean the transfer file from ONS
+# This script cleans the transfer file from ONS
 setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 transfer <- read_delim("Comparativo_Intercâmbio_de_Energia_2012.csv", delim = ",", locale = locale(decimal_mark = "."))
 colnames(transfer) <- c("Date", "reg", "Date1", "reg1", "period", "value")
 

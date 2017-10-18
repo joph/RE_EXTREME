@@ -1,22 +1,19 @@
 # This script creates the hydro files for validation of Brazilian version of COPA. 
 # hydro_data_br.csv and shype_hydro_nat_ts_br.feather
 
-#### shype_hydro_nat_ts_br.feather ####
-# Reading the Swedish inflow file
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
-se_profile <- read_feather("shype_hydro_nat_ts.feather")
-
 # Reading the file with Brazilian daily inflows
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Hydro")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Hydro")
-br_profile <- as_tibble(read.csv("daily_inflows_4regions_1979_2014.csv", header = T, sep = ";")) %>% 
-  select(-X, -X.1) 
-br_profile <- br_profile[1:13149,]
-br_profile$Date<-as.POSIXct(paste(br_profile$Date,"00:00:00"))
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Hydro")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Hydro")
+# br_profile <- as_tibble(read.csv("daily_inflows_4regions_1979_2014.csv", header = T, sep = ";")) %>% 
+#   select(-X, -X.1) 
+# br_profile <- br_profile[1:13149,]
+# br_profile$Date<-as.POSIXct(paste(br_profile$Date,"00:00:00"))
+# 
+# br_profile<-br_profile %>% gather(Region,mwh,-Date) 
 
-br_profile<-br_profile %>% gather(Region,mwh,-Date) 
-
+br_profile <- read_delim("daily_inflows_4regions_1979_2014.csv", delim = ";", locale = locale(decimal_mark = ".")) %>%
+  select(-X6, -X7) %>% filter(!is.na(Date)) %>% gather(Region,mwh,-Date)
+br_profile$Date <- as.POSIXct(br_profile$Date, tz = "UTC")
 
 # Creating date column
 dates<-c("1979-01-01 00:00:00",
@@ -50,25 +47,50 @@ br_shype_hydro$region <- c(rep(c("SE4"), nrow(br_shype_hydro) / 4),
                            rep(c("SE2"), nrow(br_shype_hydro) / 4),
                            rep(c("SE1"), nrow(br_shype_hydro) / 4))
 
-# writing file(feather and csv)
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
+# writing file(feather and csv) # FULL PERIOD - 1979 TO 2014
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
 #save_hydro_data_br <- write.table(br_shype_hydro, file = "br_shype_hydro.csv", sep =";", row.names = FALSE )
 #write_feather(br_shype_hydro, "br_shype_hydro.feather")
 
-# checking data for 2012
-shype_br <- read_feather("br_shype_hydro.feather")
-dates_shype <- as_tibble(year(shype_br$date))
-  
-shype_br_2012 <- shype_br %>% mutate(year = dates_shype$value) %>% filter(year == 2012)
+#### checking data for 2012 ####
+shype_br_2012 <- br_shype_hydro %>% mutate(year = lubridate::year(date)) %>% filter(year == 2012)
 ggplot(shype_br_2012, aes(x = date, y = mwh/1e3, col = region)) +
   geom_line(size = 1) + facet_wrap(~region)
+
+# multiplying by the calibration factors in order to obtain the sums equals to 2012 ONS data
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Hydro")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Hydro")
+adaptFactor <- read_csv("adapFactors.csv")
+
+shype_br_2012 <- shype_br_2012 %>% select(-year) %>% mutate(mwh12 = c(rep(0,nrow(shype_br_2012))))
+
+newNames <- c("S", "SE", "N", "NE")
+shypeRegNames <- c("SE2", "SE1", "SE4", "SE3")
+for (i in c(1:length(shypeRegNames))){
+  shype_br_2012$mwh12[shype_br_2012$region == shypeRegNames[i]] <- 
+    shype_br_2012$mwh[shype_br_2012$region == shypeRegNames[i]] * adaptFactor$adaptFact[adaptFactor$Region == newNames[i]]
+}
+
+# checking sums (it is important to have checkONS defined and loaded in "Calibration_inflows.R")
+check <- shype_br_2012 %>% group_by(region) %>% summarise(sumCopa = sum(mwh12)) # 10/12/17 sums OK!!
+
+# adjusting shype_br_2012 to save in .csv
+shype_br_2012 <- shype_br_2012 %>% select(-mwh)
+colnames(shype_br_2012) <- c("date", "variable", "region", "mwh")
+
+
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
+write.table(shype_br_2012, file = "br_shype_hydro_2012.csv", sep =";", row.names = FALSE )
+write_feather(br_shype_hydro, "br_shype_hydro_2012.feather")
+
+
 #### hydro_data_br_2012 ####
 # Creating the structure of hydro_data_br
-
 # Reading the swedish file
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
 se_hydro <- as_tibble(read.csv2("hydro_data - original.csv"))
 
 se_hydro_initial <- se_hydro
@@ -76,7 +98,6 @@ se_hydro_initial[sapply(se_hydro_initial, is.factor)] <- lapply(se_hydro_initial
                                                           function(x) as.numeric(as.character(x)))
 
 se_hydro$maxReservoir <- se_hydro_initial$maxReservoir
-
 
 # Filling file with ONS values. To do: check the assumptions with Johannes
 hydro_data_br_2012 <- se_hydro
@@ -93,12 +114,12 @@ hydro_data_br_2012$maxReservoir <- c(maxreservoir_MWh_2012,0)
 #### MaxHydPower ####
 # MaxHydPower: the maximum power that could be generated in each subsystem.
 # We will determine it by the aggregation of power information of each subsystem. It came from CadUsh.csv
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Newave_deck_dec_2012")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Newave_deck_dec_2012")
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Newave_deck_dec_2012")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Newave_deck_dec_2012")
 cad <- as_tibble(read.csv2("CadUsH.csv", header = T, sep = ";"))
 # n <- c(1:5)
 # test <- paste("X.Maq.", n[1:5], ".", sep ="")
-cad <- cad %>% select(Usina, Sistema, X.Maq.1., PotEf.1., 
+cad <- cad %>% select(CodUsina,Usina, Sistema, X.Maq.1., PotEf.1., 
                       X.Maq.2., PotEf.2.,
                       X.Maq.3., PotEf.3.,
                       X.Maq.4., PotEf.4.,
@@ -107,7 +128,8 @@ cad <- cad %>% select(Usina, Sistema, X.Maq.1., PotEf.1.,
 cad_initial <- cad
 cad_initial[sapply(cad_initial, is.factor)] <- lapply(cad_initial[sapply(cad_initial, is.factor)], 
                                                                   function(x) as.numeric(as.character(x)))  
-cad[,3:ncol(cad)] <- cad_initial[,3:ncol(cad_initial)]  
+
+cad[,4:ncol(cad)] <- cad_initial[,4:ncol(cad_initial)]  
 cad <- cad %>% mutate(PotEfUn = X.Maq.1. * PotEf.1. + 
                         X.Maq.2. * PotEf.2. + 
                         X.Maq.3. * PotEf.3. + 
@@ -115,13 +137,29 @@ cad <- cad %>% mutate(PotEfUn = X.Maq.1. * PotEf.1. +
                         X.Maq.5. * PotEf.5.) %>% 
   separate(Sistema, into = c("num", "subsystem"), sep ="-")
 
-maxHydPower <- cad %>% group_by(subsystem) %>% summarise(maxHydPower = sum(PotEfUn))
+# some hydro plants have to be removed from deck, because they were not operating in dec 2012. 
+# They are save in file "exph12.csv"
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Hydro")
+setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Hydro")
+exph12 <- read_csv("exph12.csv")
+
+# Removing the power from these power plants
+cad12 <- cad
+cad12 <- full_join(cad, exph12, by = c("CodUsina" = "COD"))
+cad12 <- cad12 %>% select(CodUsina, Usina, subsystem, PotEfUn.x, PotEfUn.y)
+cad12$PotEfUn.y[is.na(cad12$PotEfUn.y)] <- 0
+
+cad12 <- cad12 %>% mutate(PotEfUn = PotEfUn.x - PotEfUn.y)
+cad12$PotEfUn[cad12$PotEfUn < 0] <- 0  # BELO MONTE would enter more power than what was installed
+
+# defining maxHydPower parameter
+maxHydPower <- cad12 %>% group_by(subsystem) %>% summarise(maxHydPower = sum(PotEfUn))
 
 hydro_data_br_2012$maxHydPower <- c(maxHydPower$maxHydPower[3],
-                               maxHydPower$maxHydPower[4],
-                               maxHydPower$maxHydPower[1],
-                               maxHydPower$maxHydPower[2],
-                               0)
+                                    maxHydPower$maxHydPower[4],
+                                    maxHydPower$maxHydPower[1],
+                                    maxHydPower$maxHydPower[2],
+                                    0)
 
 #### minFlow ####
 # minFlow will be minimum observed value from the daily inflows from 1979 to 2014 (Johannes file).
@@ -133,14 +171,13 @@ hydro_data_br_2012$Region[hydro_data_br_2012$Region == "BR1"] <- "SE1"
 hydro_data_br_2012$Region[hydro_data_br_2012$Region == "BR2"] <- "SE2"
 hydro_data_br_2012$Region[hydro_data_br_2012$Region == "BR3"] <- "SE3"
 hydro_data_br_2012$Region[hydro_data_br_2012$Region == "BR4"] <- "SE4"
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
-#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
-write.table(hydro_data_br_2012, file = "hydro_data_br_2012_1.csv", sep =";", row.names = FALSE )
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
+# setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
+# write.table(hydro_data_br_2012, file = "hydro_data_br_2012.csv", sep =";", row.names = FALSE )
 
+#write_csv(hydro_data_br_2012,"hydro_data_br_2012_wobm.csv") COPA does not read 
 
 ####
-
-
 # writing table and Saving file 
 #setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
 # setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")

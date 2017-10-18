@@ -13,11 +13,13 @@ library(tibble)
 library(feather)
 library(xlsx)
 library(stringr)
+library(lubridate)
 library(ggplot2)
 library(gridExtra)
 library(RColorBrewer)
 library(reshape2)
 library(gdxrrw)
+
 
 # Arquivos do deck a serem lidos:
 # conft.dat -> nomes, localização e situação - OK

@@ -386,7 +386,9 @@ readModelResults<-function(in_,f,period,runname){
                            "x_invest_intermittent",
                            "bal_",
                            "hydro")
-                             #"x_slack") 
+#                          "x_transfer_in",
+#                          "x_transfer_out")
+#                          "x_slack") 
   
   dir.create(file.path("../runs", runname), showWarnings = FALSE)
   file.copy(paste("../gms_execute/",f,sep=""),paste("../runs/",runname,sep=""))

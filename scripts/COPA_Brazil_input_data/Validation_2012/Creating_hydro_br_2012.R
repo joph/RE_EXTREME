@@ -82,8 +82,8 @@ colnames(shype_br_2012) <- c("date", "variable", "region", "mwh")
 
 #setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
 setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
-write.table(shype_br_2012, file = "br_shype_hydro_2012.csv", sep =";", row.names = FALSE )
-write_feather(br_shype_hydro, "br_shype_hydro_2012.feather")
+#write.table(shype_br_2012, file = "br_shype_hydro_2012.csv", sep =";", row.names = FALSE )
+write_feather(shype_br_2012, "br_shype_hydro_2012.feather")
 
 
 #### hydro_data_br_2012 ####
@@ -152,6 +152,7 @@ cad12$PotEfUn.y[is.na(cad12$PotEfUn.y)] <- 0
 cad12 <- cad12 %>% mutate(PotEfUn = PotEfUn.x - PotEfUn.y)
 cad12$PotEfUn[cad12$PotEfUn < 0] <- 0  # BELO MONTE would enter more power than what was installed
 
+cad12$PotEfUn[cad12$CodUsina == 288] <- 0 # Belo Monte has delay entered.
 # defining maxHydPower parameter
 maxHydPower <- cad12 %>% group_by(subsystem) %>% summarise(maxHydPower = sum(PotEfUn))
 
@@ -172,8 +173,8 @@ hydro_data_br_2012$Region[hydro_data_br_2012$Region == "BR2"] <- "SE2"
 hydro_data_br_2012$Region[hydro_data_br_2012$Region == "BR3"] <- "SE3"
 hydro_data_br_2012$Region[hydro_data_br_2012$Region == "BR4"] <- "SE4"
 #setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
-# setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
-# write.table(hydro_data_br_2012, file = "hydro_data_br_2012.csv", sep =";", row.names = FALSE )
+ # setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
+ # write.table(hydro_data_br_2012, file = "hydro_data_br_2012.csv", sep =";", row.names = FALSE )
 
 #write_csv(hydro_data_br_2012,"hydro_data_br_2012_wobm.csv") COPA does not read 
 

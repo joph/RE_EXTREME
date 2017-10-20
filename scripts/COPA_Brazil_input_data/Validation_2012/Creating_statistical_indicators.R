@@ -1,7 +1,7 @@
 # This script creates the table with the statistical indicators of validation_2012 run. 
 
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 
 se <- read_feather("stats_summary_SE.CO.feather")
 s  <- read_feather("stats_summary_SUL.feather")
@@ -17,8 +17,10 @@ colnames(statistic_ind) <- c("Region", "Technology", "Correlation", "RMSE")
 statistic_ind
 
 #setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/tables")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/tables")
-write_feather(statistic_ind, "static_indicators_transmission_lines_costs_0000135.feather")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/tables")
+#write_feather(statistic_ind, "static_indicators_19_J3_thermalok.feather")
+#write_delim(statistic_ind, "C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/tables/statistical_indicators.csv",
+ #           delim = ";")
 ##### Comparing with solo scripts ####
 se_solo <- read_feather("stats_summary_se_solo.feather")
 s_solo  <- read_feather("stats_summary_s_solo.feather")

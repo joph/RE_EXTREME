@@ -1,7 +1,7 @@
-#base_dir<-"C:/Users/cancella/Google Drive/!IIASA/COPA/RE_EXTREME"
-base_dir<-"C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/RE_EXTREME"
-#gams_dir<-"C:/GAMS/win64/24.8"
-gams_dir<-"C:/GAMS/win64/24.7"
+base_dir<-"C:/Users/cancella/Google Drive/!IIASA/COPA/RE_EXTREME"
+#base_dir<-"C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/RE_EXTREME"
+gams_dir<-"C:/GAMS/win64/24.8"
+#gams_dir<-"C:/GAMS/win64/24.7"
 
 setwd(base_dir)
 source("scripts/functions_gdx_transfer.R")
@@ -18,7 +18,7 @@ period<-c("2012-01-01 01:00:00 CET"
 prepareFullRun(period,
                out="../gms_execute/input_tr.gdx",
                hydFile="../data/hydro/hydro_data_br_2012 - only 2012 capacity.csv",        # validation 2012   
-               hydFeather="../data/hydro/shype_hydro_ons12.feather",                       # validation 2012 - br_shype_hydro.feather (OLD - considers 2015) and br_shype_hydro_2012.feather has the adapt factors
+               hydFeather="../data/hydro/br_shype_hydro_2012.feather",                     # validation 2012 - br_shype_hydro.feather (OLD - considers 2015) and br_shype_hydro_2012.feather has the adapt factors. shype_hydro_ons12.feather (ONS inflows)
                windFeather="../data/wind/wind_br.feather",                                 # validation 2012 - same file
                solarFeather="../data/solar/solar_GAMS_br.feather",                         # validation 2012 - same file 
                loadFeather="../data/load/load_Br_2014.feather",                            # validation 2012 - same file

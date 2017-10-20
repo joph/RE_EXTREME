@@ -2,8 +2,8 @@
 
 #### Comparing these results with hydro generation from ONS ####
 # reading files with hydro generation from ONS
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
- setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 namesNew <- c("SE.CO","SUL","NE","N")
 gen_ons_final_se  <- read_csv(paste("geracao_ONS_",namesNew[1],".csv", sep=""))
 gen_ons_final_sul <- read_csv(paste("geracao_ONS_",namesNew[2],".csv", sep=""))
@@ -30,7 +30,10 @@ hydro_COPA_tot <- hydro_COPA_tot[,2:4]
 
 # comparing total hydro ONS x COPA
 hydro_tot <- bind_rows(hydro_ons_tot, hydro_COPA_tot)
-lines <- ggplot()+geom_line(data = hydro_tot, aes(x = Date, y = tot_gen, col = iTechnology), size = 1)
+lines <- ggplot()+geom_line(data = hydro_tot, aes(x = Date, y = tot_gen, col = iTechnology), size = 1) +
+  scale_color_hue(l=45)+theme(axis.text.x = element_text(angle=45))+
+  ylab("GWh") + xlab("") +  ggtitle("Hydro total generation") + 
+  theme(plot.title = element_text(hjust = 0.5))
 plot(lines)
 
 points_hydro_tot <- tibble(
@@ -40,13 +43,14 @@ points <- ggplot()+geom_point(data = points_hydro_tot, aes(x = ons, y = copa))
 plot(points)
 
 #saving in pdf
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/figures")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/figures")
 grDevices::pdf("hydro_total.pdf")
 lines
 points
 dev.off()
 
+# statistical indicators hydro total
 correlation <- cor(points_hydro_tot$ons, points_hydro_tot$copa)
 correlation
 reg_hydro <- lm(copa ~ ons , data = points_hydro_tot)
@@ -71,7 +75,10 @@ thermal_COPA_tot <- thermal_COPA_tot[,2:4]
 thermal_COPA_tot
 
 thermal_tot <- bind_rows(thermal_ons_tot, thermal_COPA_tot)
-lines_thermal <- ggplot()+geom_line(data = thermal_tot, aes(x = Date, y = tot_gen, col = iTechnology), size = 1)
+lines_thermal <- ggplot()+geom_line(data = thermal_tot, aes(x = Date, y = tot_gen, col = iTechnology), size = 1) +
+  scale_color_hue(l=45)+theme(axis.text.x = element_text(angle=45))+
+  ylab("GWh") + xlab("") +  ggtitle("Thermal total generation") + 
+  theme(plot.title = element_text(hjust = 0.5))
 plot(lines_thermal)
 
 points_thermal_tot <- tibble(
@@ -81,9 +88,17 @@ points_thermal <- ggplot()+geom_point(data = points_thermal_tot, aes(x = ons, y 
 plot(points_thermal)
 
 #saving thermal plots in pdf
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/figures")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/figures")
 pdf("thermal_total.pdf")
 lines_thermal
 points_thermal
 dev.off()
+
+# statistical indicators thermal total
+correlation <- cor(points_thermal_tot$ons, points_thermal_tot$copa)
+correlation
+reg_hydro <- lm(copa ~ ons , data = points_thermal_tot)
+rmse_hydro <- modelr::rmse(reg_hydro, points_hydro_tot)
+rmse_hydro
+

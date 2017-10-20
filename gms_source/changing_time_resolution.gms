@@ -78,6 +78,7 @@ parameter mult(runs,m);
 mult(runs,m)=1;
 
 parameter mult1(m);
+mult1(m)=1;
 
 display mult;
 
@@ -250,7 +251,7 @@ hydro_up(reg,t,ws,hp)$existsHydro(reg,ws,hp)
 
 *level of storage in hydropower plants
 storage_h_lev(reg,t,ws,hp)$(existsHydro(reg,ws,hp)  and
-                        (ord(t)>1) and (ord(t)<card(t)))
+                        (ord(t)>1))
                    ..x_h_stor_lv(reg,t,ws,hp)=E= x_h_stor_lv(reg,t-1,ws,hp) +
                                                  x_h_stor_in(reg,t,ws,hp)   -
                                                  x_h_stor_out(reg,t,ws,hp)
@@ -268,11 +269,11 @@ h_term(reg,t,ws,hp)$(existsHydro(reg,ws,hp) and
 
 *maximum level of storage
 storage_h_max(reg,t,ws,hp)$existsHydro(reg,ws,hp)
-                   ..x_h_stor_lv(reg,t,ws,hp)=L= maxReservoir(reg,ws,hp)*mult1("M1");
+                   ..x_h_stor_lv(reg,t,ws,hp)=L= maxReservoir(reg,ws,hp);
 
 *miminum flow constraint
 min_flow(reg,t,ws,hp)$existsHydro(reg,ws,hp)
-                    ..minFlow(reg,ws,hp)*mult1("M2")     =L= x_hydro(reg,t,ws,hp)     +
+                    ..minFlow(reg,ws,hp)     =L= x_hydro(reg,t,ws,hp)     +
                                                  x_spill(reg,t,ws,hp)     +
                                                  x_h_stor_out(reg,t,ws,hp)
                                                  ;
@@ -285,7 +286,7 @@ max_flow(reg,ws,hp,t)$existsHydro(reg,ws,hp)
 
 *maximum hydropower production, as limited by turbines
 max_hp_power(reg,ws,hp,t)$existsHydro(reg,ws,hp)
-                    ..maxHydPower(reg,ws,hp)*mult1("M4")*0.50 =G= x_hydro(reg,t,ws,hp)+
+                    ..maxHydPower(reg,ws,hp) =G= x_hydro(reg,t,ws,hp)+
                                                  x_h_stor_out(reg,t,ws,hp);
 
 *********battery storage*********
@@ -315,7 +316,7 @@ therm_max(reg,p)$investOptions(reg,p,"Thermal","maxCap")
 *********transmission*********
 
 transmission_cap(reg,reg1,t)$transmissionCap(reg,reg1)
-                ..x_transfer(reg,reg1,t) =L= transmissionCap(reg,reg1)*mult1("M3");
+                ..x_transfer(reg,reg1,t) =L= transmissionCap(reg,reg1);
 
 trans_eq(reg,reg1,t)$transmissionCap(reg,reg1)
                 ..x_transfer(reg,reg1,t)=E=x_transfer(reg1,reg,t)*(-1);
@@ -350,7 +351,7 @@ model mint/
 scalar starttime;
 scalar elapsed;
 OPTION RESLIM = 50000000;
-option limrow=100;
+option limrow=36000;
 
 
 

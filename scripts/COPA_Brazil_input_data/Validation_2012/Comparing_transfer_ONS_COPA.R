@@ -18,8 +18,8 @@ transfer_daily_graph <- transfer_daily %>% filter(index == "NE.SE/CO"|index == "
 COPA <- ggplot(data = transfer_daily_graph, aes(x=datetime,y=value/1e3)) +geom_line(aes(col=index), size =1)
 plot(COPA)
 # reading ONS transfer
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/ONS validation")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/ONS validation")
 ONS_transfer <- read_csv("transfer_ONS.csv")
 ONS <-ggplot(ONS_transfer)+ geom_line(aes(x = Date, y = value, col = reg), size=1)
 plot(ONS)
@@ -64,8 +64,8 @@ total_summary <- transfer_comp_t %>% group_by(type) %>% summarise(total = sum(to
 # COPA transfer almost 2x more electricity than ONS does.
 
 #### saving plots in pdf file ####
- #setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures")
- setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/figures")
+ setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures")
+ #setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/figures")
  grDevices::pdf("comparation_electricity_exchanges_ONS_COPA.pdf")
  transfer_comparation
  total_transfer

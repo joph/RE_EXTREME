@@ -12,12 +12,14 @@ invest_opts_sweden <- as_tibble(read.csv2("investOpts - original.csv", header = 
 #setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Costs/Tables/validation_2012")
 setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Costs/Tables/validation_2012")
 br_cvu <-  read_feather("tabela_para_invest_opts_br_sem_CI_2012.feather")
-
-
 br_cvu <- as_tibble(br_cvu)
-  br_ci <- read.csv2("tabela_para_invest_opts_br_com_CI.csv", header = T, sep =";", stringsAsFactors = F)
-  br_ci <- as_tibble(br_ci)
+# br_ci <- read.csv2("tabela_para_invest_opts_br_com_CI.csv", header = T, sep =";", stringsAsFactors = F)
+# br_ci <- as_tibble(br_ci)
 
+# Plotting the merit curve   
+br_cvu %>% group_by(Subsistema) %>% arrange(CVU) %>% mutate(potsum=cumsum(pot_disp)) %>% 
+    select(potsum,CVU,Subsistema) %>% ggplot(aes(potsum,CVU)) +geom_line()+ facet_wrap(~Subsistema)
+  
 # adjusting the order of the columns
 invest_opts_br <- select(br_cvu, NUM, Subsistema, NOME, TIPO_COMB., Situacao:ind)
 
@@ -73,6 +75,9 @@ colnames(corresp) <- c("nome", "sub", "Region", "P")
 # Expanding the table to each plant get three entries
 exp_corresp <- bind_rows(corresp, corresp, corresp)
 
+# saving correspondence table 
+# setwd("C:/Users/cancella/Google Drive")
+# corresp <- write_feather(corresp_sub, "corresp.feather")
 # Arranging by names in order to get the three entries
 exp_corresp <- arrange(exp_corresp, nome)
 
@@ -160,8 +165,8 @@ invest_opts_br$Value[invest_opts_br$Variable == "VarCost"] <- invest_opts_br$Val
 
 
 # Saving the invest_opts_br in a .csv file 
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
-save_invest_opts_br <- write.table(invest_opts_br, file = "investOpts_br_thermal.sources_2012.csv", sep = ";", row.names = FALSE )
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
+#save_invest_opts_br <- write.table(invest_opts_br, file = "investOpts_br_thermal.sources_2012.csv", sep = ";", row.names = FALSE )
 
 ##### For the time being, changing the names of regions from "BR" to "SE"
 invest_opts_br$Region[invest_opts_br$Region == "BR1"] <- "SE1"
@@ -171,8 +176,8 @@ invest_opts_br$Region[invest_opts_br$Region == "BR4"] <- "SE4"
 #Technology column = Thermal
 invest_opts_br$Technology <- "Thermal"
 
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
-save_invest_opts_br <- write.table(invest_opts_br, file = "investOpts_br_thermal.sources_1_2012.csv", sep = ";", row.names = FALSE )
+#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/investOptions")
+#save_invest_opts_br <- write.table(invest_opts_br, file = "investOpts_br_thermal.sources_1_2012.csv", sep = ";", row.names = FALSE )
 #####
 
 

@@ -337,17 +337,7 @@ transmission_cap_out(reg,reg1,t)$transmissionCap(reg,reg1)
 transmission_cap_in(reg,reg1,t)$transmissionCap(reg,reg1)
                 ..x_transfer_in(reg,reg1,t) =L= transmissionCap(reg,reg1)*mult1("M3");
 
-trans_eq1(reg,reg1,t)..x_transfer_out("SE001","SE002",t)  =E= x_transfer_in("SE002","SE001",t);
-trans_eq2(reg,reg1,t)..x_transfer_out("SE001","SE003",t)  =E= x_transfer_in("SE003","SE001",t);
-trans_eq3(reg,reg1,t)..x_transfer_out("SE001","SE005",t)  =E= x_transfer_in("SE005","SE001",t);
-trans_eq4(reg,reg1,t)..x_transfer_out("SE002","SE001",t)  =E= x_transfer_in("SE001","SE002",t);
-trans_eq5(reg,reg1,t)..x_transfer_out("SE003","SE005",t)  =E= x_transfer_in("SE005","SE003",t);
-trans_eq6(reg,reg1,t)..x_transfer_out("SE004","SE005",t)  =E= x_transfer_in("SE005","SE004",t);
-trans_eq7(reg,reg1,t)..x_transfer_out("SE003","SE001",t)  =E= x_transfer_in("SE001","SE003",t);
-trans_eq8(reg,reg1,t)..x_transfer_out("SE005","SE001",t)  =E= x_transfer_in("SE001","SE005",t);
-trans_eq9(reg,reg1,t)..x_transfer_out("SE005","SE004",t)  =E= x_transfer_in("SE004","SE005",t);
-trans_eq10(reg,reg1,t)..x_transfer_out("SE005","SE003",t) =E= x_transfer_in("SE003","SE005",t);
-
+trans_eq1(reg,reg1,t)..x_transfer_out(reg,reg1,t)  =E= x_transfer_in(reg1,reg,t);
 
 
 *model mint /all/;

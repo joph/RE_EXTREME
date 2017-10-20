@@ -56,6 +56,10 @@ $LOAD hydroConvFact,runOffDelay,load,investOptions,length,transmissionCap
 $load maxHydPower,intermittentOptions, initReservoir, termReservoir
 $GDXIN
 
+
+
+
+
 parameter results(runs,reg,resCat);
 parameter invest_thermal_cap;
 
@@ -81,6 +85,9 @@ parameter mult1(m);
 mult1(m)=1;
 
 display mult;
+
+*investOptions(reg,p,"Thermal","maxCap")$(investOptions(reg,p,"Thermal","VarCost")=0)=300;
+display investOptions;
 
 
 parameter existsHydro(reg,ws,hp);
@@ -190,11 +197,16 @@ therm_max,
 
 transmission_cap,
 
-trans_eq
+trans_eq,
+
+limit_therm_non_installed,
+
+limit_hyd_non_installed
 ;
 
 
-objective             ..totalCost            =E= SUM((reg,t,p)$investOptions(reg,p,"Thermal","VarCost")         ,investOptions(reg,p,"Thermal","VarCost")*x_term(reg,t,p)*length(t))                           +
+objective             ..totalCost            =E= SUM((reg,t,p)$((investOptions(reg,p,"Thermal","VarCost")>0) and
+                                                                (investOptions(reg,p,"Thermal","maxCap")>0))    ,investOptions(reg,p,"Thermal","VarCost")*x_term(reg,t,p)*length(t))                           +
                                                  SUM((reg,p  )$investOptions(reg,p,"Thermal","Investment")      ,investOptions(reg,p,"Thermal","Investment")*x_invest_thermal_cap(reg,p))                      +
                                                  SUM((reg,p  )$investOptions(reg,p,"Storage","Investment")      ,investOptions(reg,p,"Storage","Investment")*x_invest_storage(reg,p))                          +
                                                  SUM((reg,p,iTechnology )$existsIntermittent(reg,p,iTechnology) ,intermittentOptions(reg,p,iTechnology,"Investment")*x_invest_intermittent(reg,p,iTechnology))
@@ -205,7 +217,9 @@ objective             ..totalCost            =E= SUM((reg,t,p)$investOptions(reg
 
 *balances supply and demand in the region
 bal(reg,t)$(hasLoad(reg,t) or (ord(reg)=5))
-                      ..load(reg,t)          =E= SUM(p$investOptions(reg,p,"Thermal","VarCost"),x_term(reg,t,p))                        +
+                      ..load(reg,t)          =E= SUM(p$((investOptions(reg,p,"Thermal","VarCost")>0) and
+                                                                (investOptions(reg,p,"Thermal","maxCap")>0)),
+                                                                                                x_term(reg,t,p))                        +
                                                  SUM((ws,hp)$existsHydro(reg,ws,hp),0.99*x_h_stor_out(reg,t,ws,hp))                     +
                                                  SUM((p)$investOptions(reg,p,"Storage","Investment"),0.9*x_stor_out(reg,t,p))           +
                                                  SUM((p,iTechnology)$existsIntermittent(reg,p,iTechnology),x_renew(reg,t,p,iTechnology))+
@@ -269,11 +283,11 @@ h_term(reg,t,ws,hp)$(existsHydro(reg,ws,hp) and
 
 *maximum level of storage
 storage_h_max(reg,t,ws,hp)$existsHydro(reg,ws,hp)
-                   ..x_h_stor_lv(reg,t,ws,hp)=L= maxReservoir(reg,ws,hp)*mult1("M1");
+                   ..x_h_stor_lv(reg,t,ws,hp)=L= maxReservoir(reg,ws,hp);
 
 *miminum flow constraint
 min_flow(reg,t,ws,hp)$existsHydro(reg,ws,hp)
-                    ..minFlow(reg,ws,hp)*mult1("M2")     =L= x_hydro(reg,t,ws,hp)     +
+                    ..minFlow(reg,ws,hp)     =L= x_hydro(reg,t,ws,hp)     +
                                                  x_spill(reg,t,ws,hp)     +
                                                  x_h_stor_out(reg,t,ws,hp)
                                                  ;
@@ -286,7 +300,7 @@ max_flow(reg,ws,hp,t)$existsHydro(reg,ws,hp)
 
 *maximum hydropower production, as limited by turbines
 max_hp_power(reg,ws,hp,t)$existsHydro(reg,ws,hp)
-                    ..maxHydPower(reg,ws,hp)*mult1("M4") =G= x_hydro(reg,t,ws,hp)+
+                    ..maxHydPower(reg,ws,hp) =G= x_hydro(reg,t,ws,hp)+
                                                  x_h_stor_out(reg,t,ws,hp);
 
 *********battery storage*********
@@ -316,12 +330,10 @@ therm_max(reg,p)$investOptions(reg,p,"Thermal","maxCap")
 *********transmission*********
 
 transmission_cap(reg,reg1,t)$transmissionCap(reg,reg1)
-                ..x_transfer(reg,reg1,t) =L= transmissionCap(reg,reg1)*mult1("M3");
+                ..x_transfer(reg,reg1,t) =L= transmissionCap(reg,reg1);
 
 trans_eq(reg,reg1,t)$transmissionCap(reg,reg1)
                 ..x_transfer(reg,reg1,t)=E=x_transfer(reg1,reg,t)*(-1);
-
-
 
 *model mint /all/;
 

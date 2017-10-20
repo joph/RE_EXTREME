@@ -49,3 +49,7 @@ for (i in c(1:length(newNames))){
   profiles$inflows12[profiles$Region == newNames[i]] <- 
     profiles$mwh.y[profiles$Region == newNames[i]] * adaptFactor$adaptFact[adaptFactor$Region == newNames[i]]
 }
+
+# checking that adaptation factors are correct
+profiles %>% gather(var,val,-Date,-Region) %>% 
+  ggplot(aes(Date,val, color = var)) + geom_line() + facet_wrap(~Region)

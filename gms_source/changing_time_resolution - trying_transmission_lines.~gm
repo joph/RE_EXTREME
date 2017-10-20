@@ -205,7 +205,7 @@ objective             ..totalCost            =E= SUM((reg,t,p)$investOptions(reg
                                                  SUM((reg,p  )$investOptions(reg,p,"Thermal","Investment")      ,investOptions(reg,p,"Thermal","Investment")*x_invest_thermal_cap(reg,p))                      +
                                                  SUM((reg,p  )$investOptions(reg,p,"Storage","Investment")      ,investOptions(reg,p,"Storage","Investment")*x_invest_storage(reg,p))                          +
                                                  SUM((reg,p,iTechnology )$existsIntermittent(reg,p,iTechnology) ,intermittentOptions(reg,p,iTechnology,"Investment")*x_invest_intermittent(reg,p,iTechnology)) +
-                                                 SUM((reg, reg1,t)                                              ,0.0020*x_transfer_out(reg, reg1,t))
+                                                 SUM((reg, reg1,t)                                              ,0.0000135*x_transfer_out(reg, reg1,t))
 *                                                 SUM((reg,reg1,t)                                               ,x_transfer(reg,reg1,t))*4.5
 *+
 *                                                 SUM((reg,t,ws,hp),-1*x_slack(reg,t,ws,hp)*700000)

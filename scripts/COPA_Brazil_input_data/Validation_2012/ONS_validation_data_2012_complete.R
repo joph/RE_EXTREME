@@ -82,8 +82,10 @@
     # lines together
     lines_together <- ggplot() + 
       geom_line(data = gen_ons_copa_tog, aes(x = Date, y = production, col = type), size = 1) +
-      scale_fill_brewer(palette="Set2") + facet_wrap(~iTechnology) + scale_color_hue(l=45)+theme(axis.text.x = element_text(angle=45))+
-      ylab("GWh") + xlab("") +  ggtitle(paste("Comparing generation - ", namesNew[i], sep = "" )) + 
+      scale_fill_brewer(palette="Set2") + facet_wrap(~iTechnology) + 
+      scale_color_hue(l=45)+theme(axis.text.x = element_text(angle=45))+
+      ylim(0,max(gen_ons_copa_tog$production))+ ylab("GWh") + xlab("") +
+      ggtitle(paste("Comparing generation - ", namesNew[i], sep = "" )) + 
       theme(plot.title = element_text(hjust = 0.5))
     plot(lines_together)
     #ggsave(paste(path_fig,"/lines_tog_", namesNew[i], ".pdf", sep=""),lines_together,width=30,height=20,units="cm")
@@ -95,7 +97,9 @@
       ons =   c(gen_ons_copa$production[gen_ons_copa$iTechnology == "hydro_ons"]), 
       copa =  c(gen_ons_copa$production[gen_ons_copa$iTechnology == "hydro_copa"]))
     plot_points_hydro <- ggplot(data = points_hydro, aes(x = ons, y = copa)) + geom_point() +
-      ylab("ONS") + xlab("COPA") + ggtitle(paste("ONS x COPA - hydro - ", namesNew[i], sep="")) + theme(plot.title = element_text(hjust = 0.5))
+      xlim(0, max(points_hydro$ons)) + ylim(0,max(points_hydro$copa)) + ylab("ONS") + xlab("COPA") +
+      ggtitle(paste("ONS x COPA - hydro - ", namesNew[i], sep="")) +
+      theme(plot.title = element_text(hjust = 0.5))
     plot(plot_points_hydro)
     #ggsave(paste(path_fig,"/points_hydro_", namesNew[i], ".pdf", sep=""),plot_points_hydro,width=30,height=20,units="cm")
     #ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/SE/points_hydro_se.pdf",plot_points_hydro_se,width=30,height=20,units="cm")
@@ -105,7 +109,9 @@
       ons =   c(gen_ons_copa$production[gen_ons_copa$iTechnology == "Thermal_ons"]), 
       copa =  c(gen_ons_copa$production[gen_ons_copa$iTechnology == "Thermal_copa"]))
     plot_points_thermal <- ggplot(data = points_thermal, aes(x = ons, y = copa)) + geom_point() +
-      ylab("ONS") + xlab("COPA") + ggtitle(paste("ONS x COPA - thermal - ", namesNew[i], sep=""))  + theme(plot.title = element_text(hjust = 0.5))
+      xlim(0, max(points_thermal$ons)) + ylim(0,max(points_thermal$copa)) + ylab("ONS") + xlab("COPA") +
+      ggtitle(paste("ONS x COPA - thermal - ", namesNew[i], sep=""))  + 
+      theme(plot.title = element_text(hjust = 0.5))
     plot(plot_points_thermal)
     #ggsave(paste(path_fig,"/points_thermal_", namesNew[i], ".pdf", sep=""),plot_points_thermal,width=30,height=20,units="cm")
     #ggsave("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/figures/points_thermal_se.pdf",points_thermal_se,width=30,height=20,units="cm")
@@ -116,7 +122,9 @@
         ons =   c(gen_ons_copa$production[gen_ons_copa$iTechnology == "wind_ons"]), 
         copa =  c(gen_ons_copa$production[gen_ons_copa$iTechnology == "wind_copa"]))
       plot_points_wind <- ggplot(data = points_wind, aes(x = ons, y = copa)) + geom_point() +
-        ylab("ONS") + xlab("COPA") + ggtitle(paste("ONS x COPA - wind - ", namesNew[i], sep=""))  + theme(plot.title = element_text(hjust = 0.5))
+        xlim(0, max(points_wind$ons))+ ylim(0,max(points_wind$copa)) + ylab("ONS") + xlab("COPA") + 
+        ggtitle(paste("ONS x COPA - wind - ", namesNew[i], sep=""))  + 
+        theme(plot.title = element_text(hjust = 0.5))
       plot(plot_points_wind)
       #ggsave(paste(path_fig,"/points_wind_", namesNew[i], ".pdf", sep=""),plot_points_wind,width=30,height=20,units="cm")
     } else {}

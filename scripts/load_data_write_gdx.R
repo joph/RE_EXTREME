@@ -10,21 +10,24 @@ source("scripts/function_raw_data_input.R")
 ####prepare run - 2 years
 #period<-c("2007-01-02 00:00:00 CET"
  #          ,"2008-12-31 23:00:00 CET")
-
+# 1 year
+# period<-c("2012-01-01 01:00:00 CET"
+#          ,"2012-12-31 23:00:00 CET")
+# 2 years
 period<-c("2012-01-01 01:00:00 CET"
-         ,"2012-12-31 23:00:00 CET")
+          ,"2013-12-31 23:00:00 CET")
 
 ############Create model run
 prepareFullRun(period,
                out="../gms_execute/input_tr.gdx",
-               hydFile="../data/hydro/hydro_data_br_2012 - only 2012 capacity.csv",        # validation 2012   
-               hydFeather="../data/hydro/br_shype_hydro_2012.feather",                     # validation 2012 - br_shype_hydro.feather (OLD - considers 2015) and br_shype_hydro_2012.feather has the adapt factors. shype_hydro_ons12.feather (ONS inflows)
-               windFeather="../data/wind/wind_br.feather",                                 # validation 2012 - same file
-               solarFeather="../data/solar/solar_GAMS_br.feather",                         # validation 2012 - same file 
-               loadFeather="../data/load/load_Br_2014.feather",                            # validation 2012 - same file
-               transmissionCSV="../data/transmission/linesCapacities_br_2012_1.csv",       # validation_2012 # linesCapacities_br_2012_1 - transmission_lines_50.csv # 50 % of 2012 capacity for each region
-               investCSV="../data/investOptions/investOpts_br_thermal.sources_1_2012.csv", # Validation_2012
-               intermittentCSV="../data/investOptions/br_intermittent_opts_2012_1.csv")    # validation 2012
+               hydFile="../data/hydro/hydro_data_br_1.csv",                                # Baseline draft   
+               hydFeather="../data/hydro/br_shype_hydro.feather",                          # Baseline draft 
+               windFeather="../data/wind/wind_br.feather",                                 # Baseline draft # same file as always
+               solarFeather="../data/solar/solar_GAMS_br.feather",                         # Baseline draft # same file as always
+               loadFeather="../data/load/load_Br_2014.feather",                            # Baseline draft # same file as always
+               transmissionCSV="../data/transmission/linesCapacities_br_1.csv",            # Baseline draft # linesCapacities_br_2012_1 - bounds on transmission to 2012.transmission_lines_50.csv # 50 % of 2012 capacity for each region
+               investCSV="../data/investOptions/investOpts_br_thermal.sources_1.csv",      # Baseline draft
+               intermittentCSV="../data/investOptions/br_intermittent_opts.csv")           # Baseline draft
 
 ############Run GAMS Manually
 

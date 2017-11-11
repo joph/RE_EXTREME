@@ -18,9 +18,11 @@ statistic_ind
 
 #setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/tables")
 #setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/tables")
-#write_feather(statistic_ind, "static_indicators_19_J3_thermalok.feather")
-#write_delim(statistic_ind, "C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/tables/statistical_indicators.csv",
+#write_feather(statistic_ind, "static_indicators_20_093_adaptFactor.feather")
+#write_delim(statistic_ind, "C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/tables/statistical_indicators.csv", 
  #           delim = ";")
+
+
 ##### Comparing with solo scripts ####
 se_solo <- read_feather("stats_summary_se_solo.feather")
 s_solo  <- read_feather("stats_summary_s_solo.feather")

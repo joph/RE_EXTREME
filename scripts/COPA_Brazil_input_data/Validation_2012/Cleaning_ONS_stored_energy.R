@@ -10,7 +10,7 @@ ONS_stored <- read_delim("Comparativo_Energia_Armazenda_Dia_2012.csv", delim = "
 colnames(ONS_stored) <- c("date", "reg", "value")
 ONS_stored$date <- parse_datetime(ONS_stored$date, format ="%d/%m/%Y")
 
-ggplot(ONS_stored, aes(date, value, col = reg))+ geom_line(size = 1)
+ggplot(ONS_stored, aes(date, value, col = reg))+ geom_line(size = 1) + ylim(0,max(ONS_stored$value))
 # Reading br_shype_hydro_2012.feather (file with the adapt factors)
 #setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
 #shype_br <- read_feather("br_shype_hydro_2012.feather")

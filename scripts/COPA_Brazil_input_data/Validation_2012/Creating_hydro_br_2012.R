@@ -2,14 +2,8 @@
 # hydro_data_br.csv and shype_hydro_nat_ts_br.feather
 
 # Reading the file with Brazilian daily inflows
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Hydro")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Hydro")
-# br_profile <- as_tibble(read.csv("daily_inflows_4regions_1979_2014.csv", header = T, sep = ";")) %>% 
-#   select(-X, -X.1) 
-# br_profile <- br_profile[1:13149,]
-# br_profile$Date<-as.POSIXct(paste(br_profile$Date,"00:00:00"))
-# 
-# br_profile<-br_profile %>% gather(Region,mwh,-Date) 
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Hydro")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Hydro")
 
 br_profile <- read_delim("daily_inflows_4regions_1979_2014.csv", delim = ";", locale = locale(decimal_mark = ".")) %>%
   select(-X6, -X7) %>% filter(!is.na(Date)) %>% gather(Region,mwh,-Date)
@@ -48,10 +42,10 @@ br_shype_hydro$region <- c(rep(c("SE4"), nrow(br_shype_hydro) / 4),
                            rep(c("SE1"), nrow(br_shype_hydro) / 4))
 
 # writing file(feather and csv) # FULL PERIOD - 1979 TO 2014
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
 #save_hydro_data_br <- write.table(br_shype_hydro, file = "br_shype_hydro.csv", sep =";", row.names = FALSE )
-#write_feather(br_shype_hydro, "br_shype_hydro.feather")
+write_feather(br_shype_hydro, "br_shype_hydro.feather")
 
 #### checking data for 2012 ####
 shype_br_2012 <- br_shype_hydro %>% mutate(year = lubridate::year(date)) %>% filter(year == 2012)
@@ -59,8 +53,8 @@ ggplot(shype_br_2012, aes(x = date, y = mwh/1e3, col = region)) +
   geom_line(size = 1) + facet_wrap(~region)
 
 # multiplying by the calibration factors in order to obtain the sums equals to 2012 ONS data
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Hydro")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Hydro")
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Hydro")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Hydro")
 adaptFactor <- read_csv("adapFactors.csv")
 
 shype_br_2012 <- shype_br_2012 %>% select(-year) %>% mutate(mwh12 = c(rep(0,nrow(shype_br_2012))))
@@ -79,12 +73,25 @@ check <- shype_br_2012 %>% group_by(region) %>% summarise(sumCopa = sum(mwh12)) 
 shype_br_2012 <- shype_br_2012 %>% select(-mwh)
 colnames(shype_br_2012) <- c("date", "variable", "region", "mwh")
 
+# Loading the second calibration factor: difference between total ONS generation and COPA generation
+# ONS is 93% of COPA generation. It is the calibration factor
+# So we multiply every hour by this calibration factor
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/runs/Validation_2012/tables")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/runs/Validation_2012/tables")
+sums <- read_delim("sums_gen_inflows.csv", delim = ";", locale = locale(decimal_mark = ","))
 
-#setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
+shype_br_2012 <- shype_br_2012 %>% mutate(mwh1 = mwh * sums$diffs_ONS_COPA[1])
+shype_br_2012 <- shype_br_2012 %>% select(date, variable, region, mwh1)
+colnames(shype_br_2012) <- c("date", "variable", "region", "mwh")
+
+setwd("C:/Users/cancella/Google Drive/!IIASA/COPA/data/hydro")
+#setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA/data/hydro")
 #write.table(shype_br_2012, file = "br_shype_hydro_2012.csv", sep =";", row.names = FALSE )
-write_feather(shype_br_2012, "br_shype_hydro_2012.feather")
-
+write_feather(shype_br_2012, "br_shype_hydro_2012_093_adaptFactor.feather")
+# br_shype_hydro_2012_093_adaptFactor.feather: contains inflows from Johannes file with 2 adapt factors: 2012 adapt factor and 93% generation differences adaptfactors. 
+# br_shype_hydro.feather (OLD - considers 2015) 
+# br_shype_hydro_2012.feather has the adapt factor of 2012 generation. 
+# shype_hydro_ons12.feather (ONS inflows)
 
 #### hydro_data_br_2012 ####
 # Creating the structure of hydro_data_br

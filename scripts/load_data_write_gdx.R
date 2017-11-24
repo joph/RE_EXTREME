@@ -11,23 +11,27 @@ source("scripts/function_raw_data_input.R")
 #period<-c("2007-01-02 00:00:00 CET"
  #          ,"2008-12-31 23:00:00 CET")
 # 1 year
-# period<-c("2012-01-01 01:00:00 CET"
-#          ,"2012-12-31 23:00:00 CET")
-# 2 years
-period<-c("2012-01-01 01:00:00 CET"
+ period<-c("2013-01-01 01:00:00 CET"
           ,"2013-12-31 23:00:00 CET")
+# 2 years
+#period<-c("2012-01-01 01:00:00 CET"
+ #         ,"2013-12-31 23:00:00 CET")
+
+# 16 years test
+#period<-c("1999-01-01 01:00:00 CET"
+#          ,"2014-12-31 23:00:00 CET")
 
 ############Create model run
 prepareFullRun(period,
                out="../gms_execute/input_tr.gdx",
-               hydFile="../data/hydro/hydro_data_br_1.csv",                                # Baseline draft   
-               hydFeather="../data/hydro/br_shype_hydro.feather",                          # Baseline draft 
-               windFeather="../data/wind/wind_br.feather",                                 # Baseline draft # same file as always
-               solarFeather="../data/solar/solar_GAMS_br.feather",                         # Baseline draft # same file as always
-               loadFeather="../data/load/load_Br_2014.feather",                            # Baseline draft # same file as always
-               transmissionCSV="../data/transmission/linesCapacities_br_1.csv",            # Baseline draft # linesCapacities_br_2012_1 - bounds on transmission to 2012.transmission_lines_50.csv # 50 % of 2012 capacity for each region
+               hydFile="../data/hydro/hydro_data_br_1.csv",                                # ready to scenarios  
+               hydFeather="../data/hydro/br_shype_hydro_corrected.feather",                # br_shype_hydro.feather * 0.93 # ready to scenarios
+               windFeather="../data/wind/wind_br.feather",                                 # ready to scenarios
+               solarFeather="../data/solar/solar_GAMS_br.feather",                         # ready to scenarios
+               loadFeather="../data/load/load_1year_projected.feather",                    # Baseline draft # 2013 of load_Br_2014.feather * 1.5 # ready to scenarios
+               transmissionCSV="../data/transmission/linesCapacities_br_1.csv",            # ready to scenarios
                investCSV="../data/investOptions/investOpts_br_thermal.sources_1.csv",      # Baseline draft
-               intermittentCSV="../data/investOptions/br_intermittent_opts.csv")           # Baseline draft
+               intermittentCSV="../data/investOptions/br_intermittent_opts.csv")           # ready to scenarios
 
 ############Run GAMS Manually
 
@@ -35,7 +39,7 @@ prepareFullRun(period,
 results<-readModelResults("input_tr.gdx",
                           "results_time_resolution.gdx",
                           period,
-                          "Validation_2012")
+                          "all_thermal_1year")
 
 #results %>% group_by(name) %>% summarize(s=sum(value))
 
@@ -105,9 +109,15 @@ dropNames<-c("x_h_stor_lv",
 fig01<-r_region_weekly %>% filter(!(name %in% dropNames)) %>% 
   ggplot(aes(x=dat_,y=value,fill=name)) + geom_area() + facet_wrap(~reg) +  
   geom_line(data=r_load_weekly,aes(x=dat_,y=value)) +
-  geom_line(data=r_loaddiff_weekly,aes(x=dat_,y=diff),col="red") +ylab("Avg. Weekly Cap (MW)")
+  geom_line(data=r_loaddiff_weekly,aes(x=dat_,y=diff),col="red") +ylab("Avg. Weekly Cap (MW)") +
+  theme(axis.text.x = element_text(angle=45))
 plot(fig01)
-ggsave("../results/figures/opt_load_bal.pdf",fig01,width=30,height=20,units="cm")
+
+png("../results/figures/opt_load_bal.png")
+fig01
+dev.off()
+
+#ggsave("../results/figures/opt_load_bal.pdf",fig01,width=30,height=20,units="cm")
 
 ###############weekly - hydro balance###############  
 includeNames<-c("x_h_stor_in",
@@ -136,16 +146,25 @@ r_hydro_weekly <- r_region_weekly %>% filter(name=="hydro")
 
 fig02<-r_region_weekly %>% filter((name %in% includeNames)) %>% 
   ggplot(aes(x=dat_,y=value,fill=name)) + geom_area() + facet_wrap(~reg) +
-  geom_line(data=r_hydro_weekly,aes(x=dat_,y=value))
+  geom_line(data=r_hydro_weekly,aes(x=dat_,y=value)) +theme(axis.text.x = element_text(angle=45))
 plot(fig02)
-ggsave("../results/figures/opt_hydro_bal.pdf",fig02,width=30,height=20,units="cm")
+
+png("../results/figures/opt_hydro_bal.png")
+fig02
+dev.off()
+
+#ggsave("../results/figures/opt_hydro_bal.pdf",fig02,width=30,height=20,units="cm")
 
 
 ###############Storage Level###############
 r_storage_weekly <- r_region_weekly %>% filter(name=="x_h_stor_lv")
-fig03 <- r_storage_weekly %>% ggplot(aes(x=dat_,y=value)) + geom_line() + facet_wrap(~reg)
+fig03 <- r_storage_weekly %>% ggplot(aes(x=dat_,y=value)) + geom_line() + facet_wrap(~reg)+theme(axis.text.x = element_text(angle=45))
 plot(fig03)
-ggsave("../results/figures/storage_level.pdf",fig03,width=30,height=20,units="cm")
+png("../results/figures/storage_level.png")
+fig03
+dev.off()
+
+#ggsave("../results/figures/storage_level.pdf",fig03,width=30,height=20,units="cm")
 
 
 ##### defining the total hydro generation #####

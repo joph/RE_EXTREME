@@ -1,10 +1,10 @@
 # Newave deck
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Costs/deck_newave_2017_05")
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Costs/deck_newave_2017_05")
-
-# Tables
-setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Costs/Tables")
-setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Costs/Tables")
+# setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Costs/deck_newave_2017_05")
+# setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Costs/deck_newave_2017_05")
+# 
+# # Tables
+# setwd("C:/Users/Rafael/Desktop/Google Drive @PPE/!IIASA/COPA  Initial Data/Costs/Tables")
+# setwd("C:/Users/cancella/Google Drive/!IIASA/COPA  Initial Data/Costs/Tables")
  
 #Bibliotecas
 library(tidyverse)
